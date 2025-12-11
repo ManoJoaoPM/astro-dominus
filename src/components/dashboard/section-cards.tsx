@@ -5,6 +5,7 @@ import {
   IconTrendingDown,
   IconTrendingUp,
   IconUserCheck,
+  IconUserPlus,
   IconUsers,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,15 @@ export function SectionCards() {
       trendingUp: true,
       footer: "Atividade semanal consistente",
       icon: <IconUserCheck className="size-5" />,
-    }
+    },
+    {
+      title: "Leads Totais",
+      value: isLoading ? "..." : data?.leads?.total?.toLocaleString("pt-BR") ?? "-",
+      change: "-", // se quiser podemos colocar crescimento depois
+      trendingUp: true,
+      footer: "Total cadastrado no sistema",
+      icon: <IconUserPlus className="size-5" />,
+    },
   ];
 
   return (

@@ -1,6 +1,7 @@
 import { startOfMonth, subMonths } from "date-fns";
 import { withSession } from "@/struct";
 import { User } from "@/models/identity/user/model";
+import { Lead } from "@/models/commercial/lead/model";
 
 export const GET = withSession(async () => {
   const now = new Date();
@@ -21,6 +22,9 @@ export const GET = withSession(async () => {
       ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100
       : 100;
 
+  const leadQuery = { deletedAt: null };
+  const totalLeads = await Lead.countDocuments(leadQuery);
+
   // --- Receita ---
 
   return Response.json({
@@ -29,6 +33,9 @@ export const GET = withSession(async () => {
       active: activeUsers,
       newThisMonth: newUsersThisMonth,
       growth: usersGrowth.toFixed(1),
+    },
+    leads: {
+      total: totalLeads,
     },
   });
 });

@@ -1,10 +1,30 @@
 import {
+  IconChartFunnel,
   IconDashboard,
+  IconFlame,
   IconUsers,
 } from "@tabler/icons-react";
 
 export const MENU = {
-  user: [],
+  operational: [
+    {
+      title: "Clientes",
+      url: "/dashboard/clients",
+      icon: IconUsers,
+    },
+  ],
+  commercial: [
+    {
+      title: "Leads",
+      url: "/dashboard/leads",
+      icon: IconFlame,
+    },
+    {
+      title: "Qualificação",
+      url: "/dashboard/leads/qualification",
+      icon: IconChartFunnel,
+    },
+  ],
   admin: [
     {
       title: "Dashboard",
@@ -12,8 +32,23 @@ export const MENU = {
       icon: IconDashboard,
     },
     {
-      title: "Usuários/Clientes",
+      title: "Usuários",
       url: "/dashboard/users",
+      icon: IconUsers,
+    },
+    {
+      title: "Leads",
+      url: "/dashboard/leads",
+      icon: IconFlame,
+    },
+    {
+      title: "Qualificação",
+      url: "/dashboard/leads/qualification",
+      icon: IconChartFunnel,
+    },
+    {
+      title: "Clientes",
+      url: "/dashboard/clients",
       icon: IconUsers,
     },
   ]

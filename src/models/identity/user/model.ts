@@ -7,7 +7,12 @@ const schema = new Schema<UserInterface>({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  role: { type: String, enum: ["admin", "user"], required: true },
+  role: {
+    type: String,
+    enum: ["admin", "operational", "commercial"],
+    default: "operational",
+    index: true,
+  },
   status: { type: String, enum: ["active", "inactive"], default: "active" },
   avatar: { type: String, required: false },
   createdAt: { type: Date, default: Date.now },

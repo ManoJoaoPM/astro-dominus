@@ -4,6 +4,9 @@ import { NextRequest } from "next/server";
 import { User } from "@/models/identity/user/model";
 import { ENV } from "@/env";
 
+const ALLOWED_ROLES = ["admin", "operational", "commercial"] as const;
+type AllowedRole = (typeof ALLOWED_ROLES)[number];
+
 export const POST = async (req: NextRequest) => {
   try {
     const apiKey = req.headers.get("authorization");
@@ -12,17 +15,29 @@ export const POST = async (req: NextRequest) => {
 
     await startConnection();
     const body = await req.json();
-    const { email, name, avatar } = body;
+
+    // 👇 Agora aceitamos role opcional vindo de fora
+    const { email, name, avatar, role } = body as {
+      email: string;
+      name?: string;
+      avatar?: string;
+      role?: string;
+    };
 
     let user = await User.findOne({ email });
 
     if (!user) {
+      // 👇 Valida o role recebido; se for inválido, cai em "operational"
+      const finalRole: AllowedRole = ALLOWED_ROLES.includes(role as any)
+        ? (role as AllowedRole)
+        : "operational";
+
       user = await User.create({
         status: "active",
         avatar: avatar || null,
-        email: email,
+        email,
         name: name || email.split("@")[0],
-        role: "user",
+        role: finalRole, // 👈 agora pode ser admin / operational / commercial
       });
     }
 
@@ -32,7 +47,6 @@ export const POST = async (req: NextRequest) => {
     return Response.json({ status: false, error: error.message });
   }
 };
-
 
 export const PATCH = async (req: NextRequest) => {
   try {
@@ -48,9 +62,15 @@ export const PATCH = async (req: NextRequest) => {
     const service = new ModelService(User);
     const data = await service.findOne({ email: body.email, status: "active" });
 
+    // 🔹 Se você quiser, aqui poderia atualizar role/status/avatar etc.
+    // Exemplo:
+    // if (data && body.role && ALLOWED_ROLES.includes(body.role)) {
+    //   await service.updateById(data._id, { role: body.role });
+    // }
+
     return Response.json({ ok: true });
   } catch (error) {
     console.log(error);
     return Response.json(error, { status: 500 });
   }
-}
+};

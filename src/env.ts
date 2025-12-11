@@ -9,10 +9,12 @@ export const envSchema = z.object({
   PLATFORM_API_KEY: z.string().min(16),
   AUTH_GOOGLE_ID: z.string().optional(),
   AUTH_GOOGLE_SECRET: z.string().optional(),
-  OPENAI_API_KEY: z.string().min(32),
+  OPENAI_API_KEY: z.string().min(32).optional(),
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
   NEXT_PUBLIC_APP_NAME: z.string(),
   NEXT_PUBLIC_APP_URL: z.string(),
+  DATAFORSEO_LOGIN: z.string(),
+  DATAFORSEO_PASSWORD: z.string(),
 });
 
 export type Env = z.infer<typeof envSchema>;
