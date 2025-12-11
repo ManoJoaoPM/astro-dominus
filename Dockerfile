@@ -5,23 +5,28 @@ WORKDIR /app
 
 # ========= DEPS =========
 FROM base AS deps
-# habilita corepack para usar pnpm
-RUN corepack enable
 
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+# Copia arquivos do npm
+COPY package.json package-lock.json* ./
+
+# Instala dependências no modo produção
+# (se quiser todas as deps para build, use "npm install" sem flag)
+RUN npm ci
 
 # ========= BUILDER =========
 FROM base AS builder
-RUN corepack enable
 
 WORKDIR /app
+
+# Copia node_modules do estágio anterior
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copia código do projeto
 COPY . .
 
 # Build Next em modo standalone
 ENV NODE_ENV=production
-RUN pnpm build
+RUN npm run build
 
 # ========= RUNNER =========
 FROM base AS runner
