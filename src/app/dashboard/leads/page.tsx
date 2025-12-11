@@ -8,9 +8,9 @@ import {
 } from "@discovery-solutions/struct/client";
 
 import {
-  leadColumns,
-  leadFields,
-  leadFormSchema,
+  commercialLeadFormSchema,
+  commercialLeadColumns,
+  commercialLeadFields,
 } from "@/models/commercial/lead/utils";
 
 export default function Page() {
@@ -27,7 +27,7 @@ export default function Page() {
         <div className="px-4">
           <TableView
             asChild
-            columns={leadColumns}
+            columns={commercialLeadColumns}
             endpoint="lead"
             modalId="lead"
           />
@@ -35,8 +35,8 @@ export default function Page() {
 
         {/* MODAL DE CRIAR/EDITAR */}
         <ModalForm
-          schema={leadFormSchema}
-          fields={leadFields}
+          schema={commercialLeadFormSchema}
+          fields={commercialLeadFields}
           endpoint="lead"
           modalId="lead"
           title="Registrar/Editar Lead"

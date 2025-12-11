@@ -40,6 +40,7 @@ export const { GET, POST, DELETE, PATCH, dynamic, runtime } = new CRUDController
       return sanitizeClient(data as ClientInterface);
     },
     beforeCreate: async ({ data }: HookContext<ClientInterface>) => {
+      if (!data) return data;
       if (!data.approvalToken) {
         return { approvalToken: generateApprovalToken() };
       }

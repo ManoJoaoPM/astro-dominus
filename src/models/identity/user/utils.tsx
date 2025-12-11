@@ -10,7 +10,8 @@ export * from "@/models/identity/user";
 
 export const ROLES = {
   admin: "Administrador",
-  user: "Usuário",
+  operational: "Time Operacional",
+  commercial: "Time Comercial",
   "*": "Indefinido"
 }
 

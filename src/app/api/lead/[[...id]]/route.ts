@@ -1,43 +1,56 @@
-import { Lead, LeadInterface, leadFormSchema, leadUpdateSchema } from "@/models/commercial/lead/model";
-import { CRUDController, HookContext } from "@/struct";
+import {
+  CommercialLead,
+  CommercialLeadInterface,
+  commercialLeadFormSchema,
+  commercialLeadUpdateSchema,
+} from "@/models/commercial/lead/model";
+import { CRUDController } from "@/struct";
 
-function sanitizeLead(lead: LeadInterface) {
+function sanitizeCommercialLead(lead: CommercialLeadInterface) {
   return {
     _id: lead._id,
     name: lead.name,
+    city: lead.city,
+    state: lead.state,
+    address: lead.address,
+    phone: lead.phone,
     email: lead.email,
-    status: lead.status,
-    instagram: lead.instagram,
     website: lead.website,
+    instagram: lead.instagram,
+    source: lead.source,
     qualificationStatus: lead.qualificationStatus,
-    potentialService: lead.potentialService,
+    qualificationNotes: lead.qualificationNotes,
+    scraperJobId: lead.scraperJobId,
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   } as any;
 }
 
-export const { GET, POST, PATCH, DELETE, dynamic, runtime } =
-  new CRUDController<LeadInterface>(Lead, {
-    createSchema: leadFormSchema,
-    updateSchema: leadUpdateSchema,
-    softDelete: true,
-
-     hooks: {
-      beforeCreate: async ({ data }: HookContext<LeadInterface>) => data,
-      beforeUpdate: async ({ data }: HookContext<LeadInterface>) => {
-        console.log("[beforeUpdate] data recebido:", data);
-        return data;
-      },
-      beforeSend: async (data) => {
-        if (Array.isArray(data)) return data.map(sanitizeLead);
-        return sanitizeLead(data as LeadInterface);
-      },
+export const {
+  GET,
+  POST,
+  PATCH,
+  DELETE,
+  dynamic,
+  runtime,
+} = new CRUDController<CommercialLeadInterface>(CommercialLead, {
+  createSchema: commercialLeadFormSchema,
+  updateSchema: commercialLeadUpdateSchema,
+  softDelete: true,
+  hooks: {
+    beforeSend: async (data) => {
+      if (Array.isArray(data)) return data.map(sanitizeCommercialLead);
+      if (!data) return data;
+      return sanitizeCommercialLead(data as CommercialLeadInterface);
     },
-
-    roles: {
-      GET: ["admin"],
-      POST: ["admin"],
-      PATCH: ["admin"],
-      DELETE: ["admin"],
-    },
-  });
+  },
+  roles: {
+    // leitura liberada pra todo mundo do comercial/operacional/admin
+    GET: ["admin", "operational", "commercial"],
+    // criação/edição só pra admin + operacional
+    POST: ["admin", "operational"],
+    PATCH: ["admin", "operational"],
+    // exclusão só admin
+    DELETE: ["admin"],
+  },
+});

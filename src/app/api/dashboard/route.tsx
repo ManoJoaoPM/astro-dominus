@@ -1,7 +1,7 @@
 import { startOfMonth, subMonths } from "date-fns";
 import { withSession } from "@/struct";
 import { User } from "@/models/identity/user/model";
-import { Lead } from "@/models/commercial/lead/model";
+import { CommercialLead } from "@/models/commercial/lead/model";
 
 export const GET = withSession(async () => {
   const now = new Date();
@@ -23,7 +23,7 @@ export const GET = withSession(async () => {
       : 100;
 
   const leadQuery = { deletedAt: null };
-  const totalLeads = await Lead.countDocuments(leadQuery);
+  const totalLeads = await CommercialLead.countDocuments(leadQuery);
 
   // --- Receita ---
 

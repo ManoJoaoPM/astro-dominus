@@ -51,11 +51,21 @@ function getDataForSeoAuthHeader() {
  * - Atualiza contadores + status do job
  */
 export const POST = withSession(
-  async ({ user }, req: NextRequest, context) => {
-    const { params } = context as { params: { id: string } };
-    const jobId = params.id;
+  async ({ user }, req: NextRequest, context: any) => {
+    const jobId = context?.params?.id as string | undefined;
 
     // Segurança básica por role
+    if (!user || !["admin", "operational"].includes(user.role as string)) {
+      return Response.json({ message: "Forbidden" }, { status: 403 });
+    }
+
+    if (!jobId) {
+      return Response.json(
+        { message: "Parâmetro 'id' não encontrado na rota." },
+        { status: 400 }
+      );
+    }
+
     if (!user || !["admin", "operational"].includes(user.role as string)) {
       return Response.json({ message: "Forbidden" }, { status: 403 });
     }

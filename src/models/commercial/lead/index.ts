@@ -34,15 +34,15 @@ export interface CommercialLeadInterface {
   updatedAt: Date;
 }
 
-export const commercialLeadCreateSchema = z.object({
-  name: z.string().min(2, { message: "Nome muito curto." }),
+export const commercialLeadFormSchema = z.object({
+  name: z.string().min(2, { message: "Nome da imobiliária deve ter ao menos 2 caracteres." }),
 
   city: z.string().optional().or(z.literal("")),
   state: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
 
   phone: z.string().optional().or(z.literal("")),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   instagram: z.string().optional().or(z.literal("")),
 
