@@ -20,8 +20,9 @@ import {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const isAdmin = user?.role === "admin" && pathname.includes("/dashboard");
-  const items = isAdmin ? MENU.admin : MENU.user;
+  //const isAdmin = user?.role === "admin" && pathname.includes("/dashboard");
+  const role = user?.role;
+  const items = MENU[role as "admin" | "operational" | "commercial"] ?? MENU.user;
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
