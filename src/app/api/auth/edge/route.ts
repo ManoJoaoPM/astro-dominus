@@ -2,7 +2,7 @@ import { startConnection } from "@/lib/mongoose";
 import { ModelService } from "@/struct";
 import { NextRequest } from "next/server";
 import { User } from "@/models/identity/user/model";
-import { ENV } from "@/env";
+import { ENV_SERVER } from "@/env.server";
 
 const ALLOWED_ROLES = ["admin", "operational", "commercial"] as const;
 type AllowedRole = (typeof ALLOWED_ROLES)[number];
@@ -10,7 +10,7 @@ type AllowedRole = (typeof ALLOWED_ROLES)[number];
 export const POST = async (req: NextRequest) => {
   try {
     const apiKey = req.headers.get("authorization");
-    if (apiKey !== ENV.PLATFORM_API_KEY)
+    if (apiKey !== ENV_SERVER.PLATFORM_API_KEY)
       return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     await startConnection();
@@ -52,7 +52,7 @@ export const PATCH = async (req: NextRequest) => {
   try {
     const apiKey = req.headers.get("authorization");
 
-    if (apiKey !== ENV.PLATFORM_API_KEY)
+    if (apiKey !== ENV_SERVER.PLATFORM_API_KEY)
       return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     await startConnection();

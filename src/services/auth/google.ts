@@ -1,11 +1,11 @@
 
 import GoogleProviderAuth from "next-auth/providers/google";
 import { AuthService } from "@/services/auth";
-import { ENV } from "@/env";
+import { ENV_SERVER } from "@/env.server";
 
 export const GoogleProvider = GoogleProviderAuth({
-  clientId: ENV.AUTH_GOOGLE_ID,
-  clientSecret: ENV.AUTH_GOOGLE_SECRET,
+  clientId: ENV_SERVER.AUTH_GOOGLE_ID,
+  clientSecret: ENV_SERVER.AUTH_GOOGLE_SECRET,
   profile: async (profile: any) => {
     const { user } = await AuthService.getUserByEmail(profile.email);
 

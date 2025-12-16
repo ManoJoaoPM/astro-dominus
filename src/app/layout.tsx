@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Spectral } from "next/font/google";
 import "./globals.css";
-import { ENV } from "@/env";
+import { ENV_PUBLIC } from "@/env.public";
+import { ENV_SERVER } from "@/env.server";
 
 const spectral = Spectral({
   variable: "--font-spectral",
@@ -10,7 +11,7 @@ const spectral = Spectral({
 });
 
 export const metadata: Metadata = {
-  title: ENV.NEXT_PUBLIC_APP_NAME,
+  title: ENV_PUBLIC.NEXT_PUBLIC_APP_NAME,
   description:
     "O ecossistema de Inteligência Aplicada que conecta pessoas, ideias e ferramentas para transformar conceitos em realidade. Crie, valide, comunique e monetize com eficiência e autonomia.",
   keywords: [
@@ -36,13 +37,13 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "DSCVR",
     locale: "pt_BR",
-    url: ENV.AUTH_URL,
+    url: ENV_SERVER.AUTH_URL,
     title: "DSCVR – Inteligência Aplicada em Movimento",
     description:
       "Um ecossistema de inteligência aplicada que une criação, validação, aprendizado e monetização. Conecte suas ideias a um fluxo integrado de ferramentas e mentes inteligentes.",
     images: [
       {
-        url: ENV.AUTH_URL + "/logo-dark.png",
+        url: ENV_SERVER.AUTH_URL + "/logo-dark.png",
         width: 1584,
         height: 600,
         alt: "DSCVR",
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
   // icons: [
   //   {
   //     rel: "icon",
-  //     url: ENV.AUTH_URL + "/favicon.ico",
+  //     url: ENV_PUBLIC.AUTH_URL + "/favicon.ico",
   //   },
   // ],
   robots: {

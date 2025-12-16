@@ -5,7 +5,8 @@ import { NavUser } from "@/components/nav/nav-user";
 import { useAuth } from "@/services/auth/session";
 import * as React from "react";
 import { MENU } from "@/components/nav/items";
-import { ENV } from "@/env";
+import { ENV_PUBLIC } from "@/env.public";
+
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -32,7 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5 justify-center"
             >
               <a href="/dashboard">
-                <span className="text-base font-semibold">{ENV.NEXT_PUBLIC_APP_NAME}</span>
+                <span className="text-base font-semibold">{ENV_PUBLIC.NEXT_PUBLIC_APP_NAME}</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
