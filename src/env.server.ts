@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // src/env.server.ts
 import z from "zod";
 
 // Em desenvolvimento, carregamos o .env local
 if (process.env.NODE_ENV !== "production") {
+  // Se não tiver dotenv instalado: npm install dotenv
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require("dotenv").config();
 }
