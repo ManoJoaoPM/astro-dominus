@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { withSession } from "@/struct";
 import { startConnection } from "@/lib/mongoose";
-import { ENV_SERVER } from "@/env.server";
+import { ENV } from "@/env";
 
 import {
   ScraperJob,
@@ -35,7 +35,7 @@ function sanitizeScraperJob(job: ScraperJobInterface) {
 // Helper básico de autenticação DataForSEO (Basic Auth)
 function getDataForSeoAuthHeader() {
   const token = Buffer.from(
-    `${ENV_SERVER.DATAFORSEO_LOGIN}:${ENV_SERVER.DATAFORSEO_PASSWORD}`,
+    `${ENV.DATAFORSEO_LOGIN}:${ENV.DATAFORSEO_PASSWORD}`,
     "utf8"
   ).toString("base64");
 

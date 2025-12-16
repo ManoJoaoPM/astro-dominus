@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signInSchema } from "@/services/auth/utils";
 import { SocialButtons } from "./social-buttons";
-import { ENV_PUBLIC } from "@/env.public";
+import { ENV } from "@/env";
 
 export function LoginForm({
   className,
@@ -71,7 +71,7 @@ export function LoginForm({
       onSubmit={handleSubmit((data) => mutation.mutate(data))}
     >
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">{ENV_PUBLIC.NEXT_PUBLIC_APP_NAME}</h1>
+        <h1 className="text-2xl font-bold">{ENV.NEXT_PUBLIC_APP_NAME}</h1>
         <p className="text-muted-foreground text-balance">
           Faça login na sua conta
         </p>

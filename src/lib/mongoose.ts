@@ -1,18 +1,18 @@
 import mongoose, { Connection, Schema } from "mongoose";
-import { ENV_SERVER } from "@/env.server";
+import { ENV } from "@/env";
 
 declare global {
   var db: mongoose.Connection | null;
 }
 
-const MONGODB_URI = ENV_SERVER.MONGODB_URI;
+const MONGODB_URI = ENV.MONGODB_URI;
 if (!MONGODB_URI) throw new Error("MONGODB_URI não está definida.");
 
 export const getConnection = () => {
   if (!global.db) {
     console.log("[MongoDB] Conectando ao banco");
     global.db = mongoose.createConnection(MONGODB_URI, {
-      dbName: ENV_SERVER.MONGODB_NAME,
+      dbName: ENV.MONGODB_NAME,
       bufferCommands: false,
       maxPoolSize: 5,
     });

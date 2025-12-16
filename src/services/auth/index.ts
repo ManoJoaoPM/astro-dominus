@@ -1,9 +1,9 @@
 import { CustomSession } from "@/services/auth/utils";
 import { UserInterface } from "@/models/identity/user";
 import { fetcher } from "@discovery-solutions/struct";
-import { ENV_SERVER } from "@/env.server";
+import { ENV } from "@/env";
 
-const baseUrl = ENV_SERVER.AUTH_URL;
+const baseUrl = ENV.AUTH_URL;
 
 export class AuthService {
   static getUserOrCreate(user: CustomSession["user"]) {
@@ -11,7 +11,7 @@ export class AuthService {
       method: "POST",
       body: user,
       headers: {
-        authorization: ENV_SERVER.PLATFORM_API_KEY,
+        authorization: ENV.PLATFORM_API_KEY,
       },
     });
   }
@@ -62,7 +62,7 @@ export class AuthService {
   static getUserByEmail(email: string) {
     return fetcher(baseUrl + "/api/auth/edge", {
       method: "POST",
-      headers: { authorization: ENV_SERVER.PLATFORM_API_KEY },
+      headers: { authorization: ENV.PLATFORM_API_KEY },
       body: { email }
     });
   }

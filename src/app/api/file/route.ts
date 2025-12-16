@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withSession } from "@/struct";
 import { put, del } from "@vercel/blob";
-import { ENV_SERVER } from "@/env.server";
+import { ENV } from "@/env";
 
 export const POST = withSession(async (_, req) => {
   console.log("Received file upload request");
@@ -20,7 +20,7 @@ export const POST = withSession(async (_, req) => {
   console.log("Uploading file to blob storage");
   const blob = await put(filePath, await file.arrayBuffer(), {
     access: "public",
-    token: ENV_SERVER.BLOB_READ_WRITE_TOKEN,
+    token: ENV.BLOB_READ_WRITE_TOKEN,
   });
 
   console.log("File uploaded successfully:", blob.url);
@@ -30,7 +30,7 @@ export const POST = withSession(async (_, req) => {
 export const DELETE = withSession(async (_, req) => {
   try {
     const { url } = await req.json();
-    await del([url], { token: ENV_SERVER.BLOB_READ_WRITE_TOKEN });
+    await del([url], { token: ENV.BLOB_READ_WRITE_TOKEN });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.log(error);

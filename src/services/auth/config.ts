@@ -1,7 +1,7 @@
 import { CredentialsProvider } from "@/services/auth/credentials";
 import { GoogleProvider } from "@/services/auth/google";
 import { NextAuthConfig } from "next-auth";
-import { ENV_SERVER } from "@/env.server";
+import { ENV } from "@/env";
 
 export const publicRoutes = [
   "/auth",
@@ -28,7 +28,7 @@ export const authConfig = {
     CredentialsProvider,
     GoogleProvider,
   ],
-  secret: ENV_SERVER.AUTH_SECRET,
+  secret: ENV.AUTH_SECRET,
   trustHost: true,
   session: {
     strategy: "jwt",
