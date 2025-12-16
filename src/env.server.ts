@@ -1,11 +1,14 @@
 // src/env.server.ts
-import "server-only";
 import z from "zod";
 
 // Em desenvolvimento, carregamos o .env local
 if (process.env.NODE_ENV !== "production") {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   require("dotenv").config();
+}
+
+if (typeof window !== "undefined") {
+  throw new Error("ENV_SERVER não pode ser importado no client.");
 }
 
 export const envServerSchema = z.object({
