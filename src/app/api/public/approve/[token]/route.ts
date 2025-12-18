@@ -1,32 +1,38 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@/models/client/model";
 import { SocialPost } from "@/models/socialmedia/post/model";
 
-export async function GET(req: Request) {
-  // ✅ pega o token do path: /api/public/approve/[token]
-  const token = new URL(req.url).pathname.split("/").pop() || "";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+function json(status: number, data: any) {
+  return NextResponse.json(data, { status });
+}
+
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
 
   if (!token) {
-    return NextResponse.json({ ok: false, error: "Missing token" }, { status: 400 });
+    return json(400, { ok: false, error: "Missing token" });
   }
 
-  // 1) cliente pelo token
   const client: any = await Client.findOne({
     approvalToken: token,
-    deletedAt: null, // remova se seu Client não tiver isso
+    deletedAt: null,
   }).lean();
 
   if (!client) {
-    return NextResponse.json({ ok: false, error: "Invalid token" }, { status: 404 });
+    return json(404, { ok: false, error: "Invalid token" });
   }
 
-  // 2) id do cliente (prioriza id, cai pra _id se existir)
   const clientId = String(client.id ?? client._id);
   if (!clientId || clientId === "undefined") {
-    return NextResponse.json({ ok: false, error: "Client id not found" }, { status: 500 });
+    return json(500, { ok: false, error: "Client id not found" });
   }
 
-  // 3) posts pendentes
   const posts = await SocialPost.find({
     clientId,
     status: "pending",
@@ -35,13 +41,9 @@ export async function GET(req: Request) {
     .sort({ publishDate: 1 })
     .lean();
 
-  // 4) retorno sanitizado (sem depender do Struct)
-  return NextResponse.json({
+  return json(200, {
     ok: true,
-    client: {
-      id: clientId,
-      name: client.name,
-    },
+    client: { id: clientId, name: client.name },
     posts: posts.map((p: any) => ({
       _id: String(p._id),
       clientId: p.clientId,

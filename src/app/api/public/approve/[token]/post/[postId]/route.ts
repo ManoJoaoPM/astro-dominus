@@ -1,30 +1,37 @@
-import { NextResponse } from "next/server";
-import { Client } from "@/models/client/model"; // ajuste o path
+import { NextRequest, NextResponse } from "next/server";
+import { Client } from "@/models/client/model";
 import { SocialPost } from "@/models/socialmedia/post/model";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type Body =
   | { action: "approve" }
   | { action: "reject"; reason: string; adjustments?: string };
 
+function json(status: number, data: any) {
+  return NextResponse.json(data, { status });
+}
+
 export async function POST(
-  req: Request,
-  { params }: { params: { token: string; postId: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ token: string; postId: string }> }
 ) {
-  const { token, postId } = params;
+  const { token, postId } = await params;
 
   const body = (await req.json().catch(() => null)) as Body | null;
   if (!body?.action || !["approve", "reject"].includes(body.action)) {
-    return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
+    return json(400, { ok: false, error: "Invalid action" });
   }
 
   // 1) valida cliente por token
   const client: any = await Client.findOne({
     approvalToken: token,
-    deletedAt: null, // remova se não existir
+    deletedAt: null,
   }).lean();
 
   if (!client) {
-    return NextResponse.json({ ok: false, error: "Invalid token" }, { status: 404 });
+    return json(404, { ok: false, error: "Invalid token" });
   }
 
   const clientId = String(client.id ?? client._id);
@@ -32,17 +39,17 @@ export async function POST(
   // 2) encontra post
   const post = await SocialPost.findOne({ _id: postId, deletedAt: null });
   if (!post) {
-    return NextResponse.json({ ok: false, error: "Post not found" }, { status: 404 });
+    return json(404, { ok: false, error: "Post not found" });
   }
 
   // 3) segurança: post deve pertencer ao cliente do token
   if (String(post.clientId) !== clientId) {
-    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    return json(403, { ok: false, error: "Forbidden" });
   }
 
   // 4) segurança: só decide se estiver pendente
   if (post.status !== "pending") {
-    return NextResponse.json({ ok: false, error: "Already decided" }, { status: 409 });
+    return json(409, { ok: false, error: "Already decided" });
   }
 
   // 5) aplica ação
@@ -53,7 +60,7 @@ export async function POST(
   } else {
     const reason = (body.reason || "").trim();
     if (!reason) {
-      return NextResponse.json({ ok: false, error: "Reason required" }, { status: 400 });
+      return json(400, { ok: false, error: "Reason required" });
     }
 
     post.status = "rejected";
@@ -66,5 +73,5 @@ export async function POST(
   post.updatedAt = new Date();
   await post.save();
 
-  return NextResponse.json({ ok: true });
+  return json(200, { ok: true });
 }
