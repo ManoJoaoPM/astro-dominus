@@ -30,6 +30,11 @@ const schema = new Schema<SocialPostInterface>({
   rejectionReason: { type: String, default: null },
   revisionRequest: { type: String, default: null },
 
+  publicApprovalToken: { type: String, default: null, index: true },
+  publicApprovalEnabled: { type: Boolean, default: false, index: true },
+  publicApprovalExpiresAt: { type: Date, default: null },
+
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   deletedAt: { type: Date, default: null },

@@ -33,6 +33,10 @@ export interface SocialPostInterface {
   rejectionReason?: string | null;
   revisionRequest?: string | null;
 
+  publicApprovalToken?: string | null;
+  publicApprovalEnabled?: boolean;
+  publicApprovalExpiresAt?: Date | null;
+
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -60,6 +64,11 @@ export const socialPostFormSchema = z.object({
 
   rejectionReason: z.string().optional().or(z.literal("")),
   revisionRequest: z.string().optional().or(z.literal("")),
+
+  publicApprovalEnabled: z.boolean().optional(),
+  publicApprovalToken: z.string().optional().or(z.literal("")),
+  publicApprovalExpiresAt: z.coerce.date().optional(),
+
 });
 
 export const socialPostUpdateSchema = socialPostFormSchema.partial();

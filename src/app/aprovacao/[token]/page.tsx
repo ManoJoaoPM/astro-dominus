@@ -4,8 +4,8 @@ import { useParams } from "next/navigation";
 import useSWR from "swr";
 import Image from "next/image";
 import { useState } from "react";
-import type { ClientInterface } from "@/models/client";
 import type { SocialPostInterface } from "@/models/socialmedia/post";
+import { GoogleDriveFolderGrid } from "@/components/GoogleDriveFolderGrid";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -21,10 +21,7 @@ function formatFormat(value: SocialPostInterface["format"]) {
 type ApprovalCardProps = {
   post: SocialPostInterface;
   onApproved: (postId: string) => Promise<void>;
-  onRejected: (
-    postId: string,
-    data: { reason: string; adjustments?: string }
-  ) => Promise<void>;
+  onRejected: (postId: string, data: { reason: string; adjustments?: string }) => Promise<void>;
 };
 
 function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
@@ -52,6 +49,7 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
       setError("Por favor, informe o motivo da recusa.");
       return;
     }
+
     try {
       setError(null);
       setLoading("reject");
@@ -59,6 +57,7 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
         reason: reason.trim(),
         adjustments: adjustments.trim() || reason.trim(),
       });
+
       setIsRejecting(false);
       setReason("");
       setAdjustments("");
@@ -73,47 +72,53 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
     <article className="rounded-xl border bg-white shadow-sm p-4 flex flex-col gap-3">
       {post.coverUrl && (
         <div className="relative w-full h-44 rounded-md overflow-hidden bg-slate-100">
-          <Image
-            src={post.coverUrl}
-            alt={post.title}
-            fill
-            className="object-cover"
-          />
+          <Image src={post.coverUrl} alt={post.title} fill className="object-cover" />
         </div>
       )}
 
+      {post.contentFolderUrl && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-medium text-slate-700">Arquivos do conteúdo</p>
+          <GoogleDriveFolderGrid contentFolderUrl={post.contentFolderUrl} height={320} />
+        </div>
+      )}
+
+
       <div className="space-y-1">
-        <p className="text-[11px] font-medium text-slate-500">
-          {formatFormat(post.format)}
-        </p>
+        <p className="text-[11px] font-medium text-slate-500">{formatFormat(post.format)}</p>
         <p className="text-sm font-semibold text-slate-900">{post.title}</p>
         <p className="text-[11px] text-slate-500">
-          Publicação prevista:{" "}
-          {new Date(post.publishDate).toLocaleDateString("pt-BR")}
+          Publicação prevista: {new Date(post.publishDate).toLocaleDateString("pt-BR")}
         </p>
       </div>
 
       {post.internalNotes && (
         <div className="rounded-md bg-slate-50 p-2 text-[11px] space-y-1">
           <p className="font-medium text-slate-700">Descrição do post</p>
-          <p className="text-slate-600 whitespace-pre-line">
-            {post.internalNotes}
-          </p>
+          <p className="text-slate-600 whitespace-pre-line">{post.internalNotes}</p>
         </div>
       )}
 
       <div className="rounded-md bg-slate-50 p-2 text-[11px] space-y-1">
         <p className="font-medium text-slate-700">Legenda sugerida</p>
-        <p className="text-slate-600 whitespace-pre-line">
-          {post.caption}
-        </p>
+        <p className="text-slate-600 whitespace-pre-line">{post.caption}</p>
       </div>
 
-      {error && (
-        <p className="text-[11px] text-red-600">
-          {error}
-        </p>
+      {post.contentFolderUrl && (
+        <div className="pt-2 border-t border-slate-200">
+          <a
+            href={post.contentFolderUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition"
+          >
+            Abrir pasta no Google Drive
+            <span aria-hidden className="text-slate-400">↗</span>
+          </a>
+        </div>
       )}
+
+      {error && <p className="text-[11px] text-red-600">{error}</p>}
 
       <div className="flex flex-col gap-2 pt-2 border-t border-slate-200">
         {!isRejecting && (
@@ -140,9 +145,7 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
             onSubmit={handleReject}
             className="space-y-2 rounded-md border border-slate-200 bg-slate-50 p-2"
           >
-            <p className="text-[11px] font-medium text-slate-700">
-              Motivo da recusa
-            </p>
+            <p className="text-[11px] font-medium text-slate-700">Motivo da recusa</p>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -151,8 +154,7 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
             />
 
             <p className="text-[11px] font-medium text-slate-700">
-              Ajustes desejados{" "}
-              <span className="text-slate-400">(opcional)</span>
+              Ajustes desejados <span className="text-slate-400">(opcional)</span>
             </p>
             <textarea
               value={adjustments}
@@ -189,43 +191,48 @@ function ApprovalCard({ post, onApproved, onRejected }: ApprovalCardProps) {
   );
 }
 
+type PublicApprovalResponse = {
+  ok: boolean;
+  client?: { id: string; name: string };
+  posts?: SocialPostInterface[];
+  error?: string;
+};
+
 export default function PublicApprovalPage() {
   const { token } = useParams() as { token: string };
 
-  // 1) Buscar cliente pelo token
-  const { data: clients } = useSWR<ClientInterface[]>(
-    `/api/client?approvalToken=${token}`,
+  const { data, mutate } = useSWR<PublicApprovalResponse>(
+    `/api/public/approve/${token}`,
     fetcher
   );
-  const client = clients?.[0];
 
-  // 2) Buscar posts pendentes desse cliente
-  const { data: posts } = useSWR<SocialPostInterface[]>(
-    client ? `/api/social-post?clientId=${client._id}&status=pending` : null,
-    fetcher
-  );
+  const client = data?.client;
+  const posts = data?.posts;
 
   async function approve(postId: string) {
-    await fetch(`/api/social-post/${postId}`, {
-      method: "PATCH",
+    const res = await fetch(`/api/public/approve/${token}/post/${postId}`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "approved" }),
+      body: JSON.stringify({ action: "approve" }),
     });
+
+    if (!res.ok) throw new Error("Approve failed");
+    await mutate();
   }
 
-  async function reject(
-    postId: string,
-    data: { reason: string; adjustments?: string }
-  ) {
-    await fetch(`/api/social-post/${postId}`, {
-      method: "PATCH",
+  async function reject(postId: string, payload: { reason: string; adjustments?: string }) {
+    const res = await fetch(`/api/public/approve/${token}/post/${postId}`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        status: "rejected",
-        rejectionReason: data.reason,
-        revisionRequest: data.adjustments ?? data.reason,
+        action: "reject",
+        reason: payload.reason,
+        adjustments: payload.adjustments,
       }),
     });
+
+    if (!res.ok) throw new Error("Reject failed");
+    await mutate();
   }
 
   return (
@@ -233,9 +240,7 @@ export default function PublicApprovalPage() {
       <header className="w-full border-b bg-white">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-semibold text-slate-900">
-              Aprovação de conteúdos
-            </h1>
+            <h1 className="text-sm font-semibold text-slate-900">Aprovação de conteúdos</h1>
             <p className="text-[11px] text-slate-500">
               Revise os posts preparados pela equipe Dominus e aprove ou solicite ajustes.
             </p>
@@ -245,16 +250,16 @@ export default function PublicApprovalPage() {
               </p>
             )}
           </div>
-          <div className="text-[10px] text-slate-400 uppercase tracking-wide">
-            Astro Dominus
-          </div>
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide">Astro Dominus</div>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-5 space-y-4">
-        {!client && (
+        {!data && <p className="text-sm text-slate-500">Carregando conteúdos...</p>}
+
+        {data && !data.ok && (
           <p className="text-sm text-slate-500">
-            Carregando informações do cliente...
+            Link inválido ou expirado.
           </p>
         )}
 
