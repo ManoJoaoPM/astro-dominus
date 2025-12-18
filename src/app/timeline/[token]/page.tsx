@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useMemo } from "react";
 import type { ClientInterface } from "@/models/client";
 import type { SocialPostInterface } from "@/models/socialmedia/post";
+import { GoogleDriveFolderGrid } from "@/components/GoogleDriveFolderGrid";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -158,14 +159,10 @@ export default function PublicTimelinePage() {
                           </span>
                         </div>
 
-                        {post.coverUrl && (
-                          <div className="relative w-full h-32 rounded-md overflow-hidden bg-slate-100">
-                            <Image
-                              src={post.coverUrl}
-                              alt={post.title}
-                              fill
-                              className="object-cover"
-                            />
+                        {post.contentFolderUrl && (
+                          <div className="space-y-2">
+                            <p className="text-[11px] font-medium text-slate-700">Arquivos do conteúdo</p>
+                            <GoogleDriveFolderGrid contentFolderUrl={post.contentFolderUrl} height={320} />
                           </div>
                         )}
 
@@ -178,6 +175,20 @@ export default function PublicTimelinePage() {
                             {post.caption}
                           </p>
                         </div>
+
+                        {post.contentFolderUrl && (
+                          <div className="pt-2 border-t border-slate-200">
+                            <a
+                              href={post.contentFolderUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition"
+                            >
+                              Abrir pasta no Google Drive
+                              <span aria-hidden className="text-slate-400">↗</span>
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </li>
