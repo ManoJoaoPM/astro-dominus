@@ -15,6 +15,8 @@ export const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string(),
   DATAFORSEO_LOGIN: z.string(),
   DATAFORSEO_PASSWORD: z.string(),
+  PIPEDRIVE_API_TOKEN: z.string().optional(),
+  PIPEDRIVE_COMPANY_DOMAIN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

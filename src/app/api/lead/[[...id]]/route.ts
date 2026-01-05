@@ -21,6 +21,9 @@ function sanitizeCommercialLead(lead: CommercialLeadInterface) {
     qualificationStatus: lead.qualificationStatus,
     qualificationNotes: lead.qualificationNotes,
     scraperJobId: lead.scraperJobId,
+    lat: lead.lat,
+    lng: lead.lng,
+    geocodeStatus: lead.geocodeStatus,
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   } as any;

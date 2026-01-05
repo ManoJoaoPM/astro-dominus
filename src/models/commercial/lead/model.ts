@@ -40,6 +40,10 @@ const schema = new Schema<CommercialLeadInterface>({
     default: null,
   },
 
+  lat: { type: Number, default: null, index: true },
+  lng: { type: Number, default: null, index: true },
+  geocodeStatus: { type: String, enum: ["pending","ok","failed"], default: "pending", index: true },
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

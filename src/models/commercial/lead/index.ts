@@ -30,6 +30,11 @@ export interface CommercialLeadInterface {
   // Relacionamento com o ScraperJob (opcional)
   scraperJobId?: string | null;
 
+  // Mapa de Leads
+  lat?: number | null;
+  lng?: number | null;
+  geocodeStatus?: "pending" | "ok" | "failed";
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -55,6 +60,11 @@ export const commercialLeadFormSchema = z.object({
   qualificationNotes: z.string().optional().or(z.literal("")),
 
   scraperJobId: z.string().optional().or(z.literal("")),
+
+  lat: z.number().optional(),
+  lng: z.number().optional(),
+  geocodeStatus: z.enum(["pending","ok","failed"]).default("pending")
+
 });
 
 export const commercialLeadUpdateSchema = z.object({
