@@ -26,6 +26,7 @@ export interface CommercialLeadInterface {
   // Qualificação
   qualificationStatus: CommercialLeadQualificationStatus;
   qualificationNotes?: string | null;
+  potentialService?: string | null;
 
   // Relacionamento com o ScraperJob (opcional)
   scraperJobId?: string | null;
@@ -34,6 +35,13 @@ export interface CommercialLeadInterface {
   lat?: number | null;
   lng?: number | null;
   geocodeStatus?: "pending" | "ok" | "failed";
+  
+  rating?: number | null;
+  reviews?: number | null;
+
+  // Integração Pipedrive
+  pipedriveId?: number | null;
+  exportedAt?: Date | null;
 
   createdAt: Date;
   updatedAt: Date;
@@ -42,14 +50,14 @@ export interface CommercialLeadInterface {
 export const commercialLeadFormSchema = z.object({
   name: z.string().min(2, { message: "Nome da imobiliária deve ter ao menos 2 caracteres." }),
 
-  city: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
-  address: z.string().optional().or(z.literal("")),
+  city: z.string().nullish().or(z.literal("")),
+  state: z.string().nullish().or(z.literal("")),
+  address: z.string().nullish().or(z.literal("")),
 
-  phone: z.string().optional().or(z.literal("")),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  instagram: z.string().optional().or(z.literal("")),
+  phone: z.string().nullish().or(z.literal("")),
+  email: z.string().email("Email inválido").nullish().or(z.literal("")),
+  website: z.string().url("URL inválida").nullish().or(z.literal("")),
+  instagram: z.string().nullish().or(z.literal("")),
 
   source: z.enum(["scraper", "manual"]).default("scraper"),
 
@@ -57,33 +65,15 @@ export const commercialLeadFormSchema = z.object({
     .enum(["pending", "qualified", "unqualified"])
     .default("pending"),
 
-  qualificationNotes: z.string().optional().or(z.literal("")),
+  qualificationNotes: z.string().nullish().or(z.literal("")),
+  potentialService: z.string().nullish().or(z.literal("")),
 
-  scraperJobId: z.string().optional().or(z.literal("")),
+  scraperJobId: z.string().nullish().or(z.literal("")),
 
-  lat: z.number().optional(),
-  lng: z.number().optional(),
+  lat: z.number().nullish(),
+  lng: z.number().nullish(),
   geocodeStatus: z.enum(["pending","ok","failed"]).default("pending")
 
 });
 
-export const commercialLeadUpdateSchema = z.object({
-  name: z.string().min(2).optional(),
-
-  city: z.string().optional().or(z.literal("")),
-  state: z.string().optional().or(z.literal("")),
-  address: z.string().optional().or(z.literal("")),
-
-  phone: z.string().optional().or(z.literal("")),
-  email: z.string().email().optional().or(z.literal("")),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  instagram: z.string().optional().or(z.literal("")),
-
-  qualificationStatus: z
-    .enum(["pending", "qualified", "unqualified"])
-    .optional(),
-
-  qualificationNotes: z.string().optional().or(z.literal("")),
-
-  scraperJobId: z.string().optional().or(z.literal("")),
-});
+export const commercialLeadUpdateSchema = commercialLeadFormSchema.partial();

@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "DSCVR",
     locale: "pt_BR",
-    url: ENV.AUTH_URL,
+    url: ENV.NEXT_PUBLIC_APP_URL,
     title: "DSCVR – Inteligência Aplicada em Movimento",
     description:
       "Um ecossistema de inteligência aplicada que une criação, validação, aprendizado e monetização. Conecte suas ideias a um fluxo integrado de ferramentas e mentes inteligentes.",

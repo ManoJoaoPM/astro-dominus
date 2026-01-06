@@ -13,8 +13,8 @@ export const envSchema = z.object({
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
   NEXT_PUBLIC_APP_NAME: z.string(),
   NEXT_PUBLIC_APP_URL: z.string(),
-  DATAFORSEO_LOGIN: z.string(),
-  DATAFORSEO_PASSWORD: z.string(),
+  DFS_API_KEY: z.string().optional(),
+  EVOLUTION_APIKEY: z.string().optional(),
   PIPEDRIVE_API_TOKEN: z.string().optional(),
   PIPEDRIVE_COMPANY_DOMAIN: z.string().optional(),
 });

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { withSession } from "@/struct";
 import { startConnection } from "@/lib/mongoose";
-import { ENV } from "@/env";
+import { DataForSEO } from "@/services/commercial/dataforseo";
 
 import {
   ScraperJob,
@@ -32,21 +32,11 @@ function sanitizeScraperJob(job: ScraperJobInterface) {
   } as any;
 }
 
-// Helper básico de autenticação DataForSEO (Basic Auth)
-function getDataForSeoAuthHeader() {
-  const token = Buffer.from(
-    `${ENV.DATAFORSEO_LOGIN}:${ENV.DATAFORSEO_PASSWORD}`,
-    "utf8"
-  ).toString("base64");
-
-  return `Basic ${token}`;
-}
-
 /**
  * POST /api/commercial/scraper-job/[id]/run
  *
  * - Atualiza o job para "running"
- * - Chama o DataForSEO (Business Listings Search)
+ * - Chama o DataForSEO (Google Maps Search)
  * - Cria CommercialLead para cada resultado
  * - Atualiza contadores + status do job
  */
@@ -86,63 +76,11 @@ export const POST = withSession(
     await (job as any).save();
 
     try {
-      // 3. Montar payload para o Business Listings Search (DataForSEO)
-      //
-      // Docs: https://docs.dataforseo.com/v3/business_data-business_listings-search-live/ :contentReference[oaicite:1]{index=1}
-      //
-      // ⚠ IMPORTANTE:
-      // - Ajuste "categories", "location_coordinate", "filters" conforme seu uso real.
-      // - Aqui vou usar um exemplo genérico pensando em imobiliárias.
-
-      const tasksPayload = [
-        {
-          // Categoria típica de imobiliária (ajuste conforme docs de categorias)
-          categories: ["real_estate_agency"],
-
-          // Descrição / título usando o query que você salvou no job
-          description: job.query,
-          title: job.query,
-
-          // Exemplo simples: sem coordenadas.
-          // IDEAL: usar location_coordinate com "lat,long,raio" ou filtros por cidade.
-          // location_coordinate: "53.476225,-2.243572,200",
-
-          limit: 100, // ajuste conforme o que fizer sentido (máx 1000)
-        },
-      ];
-
-      const dataForSeoResponse = await fetch(
-        "https://api.dataforseo.com/v3/business_data/business_listings/search/live",
-        {
-          method: "POST",
-          headers: {
-            Authorization: getDataForSeoAuthHeader(),
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(tasksPayload),
-        }
+      // 3. Buscar dados no DataForSEO
+      const items = await DataForSEO.fetchMapsData(
+        job.city || job.query || "",
+        100
       );
-
-      if (!dataForSeoResponse.ok) {
-        const text = await dataForSeoResponse.text();
-        throw new Error(
-          `Erro DataForSEO HTTP ${dataForSeoResponse.status}: ${text}`
-        );
-      }
-
-      const json: any = await dataForSeoResponse.json();
-
-      // 4. Validar a estrutura básica de sucesso
-      if (json.status_code && json.status_code !== 20000) {
-        // códigos de sucesso DataForSEO costumam ser 20000 :contentReference[oaicite:2]{index=2}
-        throw new Error(
-          `Erro DataForSEO status_code=${json.status_code} message=${json.status_message}`
-        );
-      }
-
-      const task = json.tasks?.[0];
-      const result = task?.result?.[0];
-      const items: any[] = result?.items || [];
 
       // 5. Mapear resultados → CommercialLead
       let totalLeads = 0;

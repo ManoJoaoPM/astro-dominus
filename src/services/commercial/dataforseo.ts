@@ -2,30 +2,34 @@ import { ENV } from "@/env";
 import axios from "axios";
 
 // Using Live endpoint for MVP speed, but normally should use Task Post/Get
-// Docs: https://docs.dataforseo.com/v3/google/maps/live/advanced/
+// Docs: https://docs.dataforseo.com/v3/serp/google/maps/live/advanced/
 const BASE_URL = "https://api.dataforseo.com/v3";
 
 export class DataForSEO {
   private static getAuth() {
-    const login = ENV.DATAFORSEO_LOGIN;
-    const password = ENV.DATAFORSEO_PASSWORD;
-    return Buffer.from(`${login}:${password}`).toString("base64");
+    if (ENV.DFS_API_KEY) {
+      return ENV.DFS_API_KEY;
+    }
+
+    throw new Error("DataForSEO credentials not found");
   }
 
-  static async fetchMapsData(keyword: string, location: string) {
+  static async fetchMapsData(city: string, depth: number = 100) {
     try {
       const auth = this.getAuth();
       const payload = [
         {
-          keyword: `${keyword} in ${location}`,
-          location_code: 2076, // Brazil country code, but usually better to let "in City" handle it or use specific location_code
-          language_code: "pt",
-          depth: 100, // Max results
+          keyword: `imobiliária ${city}`,
+          location_code: 2076,
+          language_code: "pt-BR",
+          device: "desktop",
+          os: "windows",
+          depth: depth,
         },
       ];
 
       const response = await axios.post(
-        `${BASE_URL}/google/maps/live/advanced`,
+        `${BASE_URL}/serp/google/maps/live/advanced`,
         payload,
         {
           headers: {

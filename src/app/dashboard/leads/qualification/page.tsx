@@ -12,6 +12,7 @@ import {
   IconUserCheck,
   IconUserX,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 
 interface Lead {
   _id: string;
@@ -29,7 +30,7 @@ export default function LeadQualificationPage() {
   const { data, isLoading } = useQuery<Lead[]>({
     queryKey: ["leads-qualification"],
     queryFn: () =>
-      fetcher("/api/lead?qualificationStatus=pending") as Promise<Lead[]>,
+      fetcher("/api/commercial/lead?qualificationStatus=pending") as Promise<Lead[]>,
   });
 
   // 2) Mutation para QUALIFICAR / NÃO QUALIFICAR
@@ -45,13 +46,34 @@ export default function LeadQualificationPage() {
     }) => {
       console.log("[MUTATION] Enviando PATCH", { id, status, potentialService });
 
-      return fetcher(`/api/lead/${id}`, {
+      // return fetcher(`/api/commercial/lead/${id}`, {
+      //   method: "PATCH",
+      //   body: JSON.stringify({
+      //     qualificationStatus: status,
+      //     potentialService,
+      //   }),
+      // });
+
+      toast.success(`Lead ${status === "qualified" ? "qualificado" : "não qualificado"} com sucesso!`);
+
+      // Usando fetch nativo para evitar problemas com fetcher do struct se houver
+      const response = await fetch(`/api/commercial/lead/${id}`, {
         method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           qualificationStatus: status,
           potentialService,
         }),
       });
+
+      if (!response.ok) {
+        throw new Error("Erro ao atualizar lead");
+      }
+
+
+      return response.json();
     },
     onSuccess: (res) => {
       console.log("[MUTATION] Sucesso:", res);
@@ -125,7 +147,7 @@ function LeadCard({
       <CardContent className="space-y-3 text-sm">
         {/* LINKS LADO A LADO */}
         <div className="grid grid-cols-2 gap-2">
-          {lead.instagram && (
+          {lead.instagram && lead.instagram !== "Não encontrado" && (
             <a
               href={lead.instagram}
               target="_blank"

@@ -14,15 +14,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Loader2, CheckCircle2, AlertCircle, Share2 } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Share2, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 interface Lead {
+  pipedriveUrl: string;
   _id: string;
   name: string;
   email?: string;
   phone?: string;
   city?: string;
+  pipedriveId?: number;
+  exportedAt?: string;
 }
 
 export default function ExportPage() {
@@ -30,7 +33,7 @@ export default function ExportPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch only qualified leads
-  const { data: leads, isLoading } = useSWR<Lead[]>(
+  const { data: leads, isLoading, mutate } = useSWR<Lead[]>(
     "/api/lead?qualificationStatus=qualified",
     fetcher
   );
@@ -48,6 +51,22 @@ export default function ExportPage() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
+  };
+
+  const handleSync = async () => {
+    setIsExporting(true); // Reusing state for loader
+    try {
+        const res = await fetcher("/api/commercial/sync/pipedrive", {
+            method: "POST",
+        });
+        toast.success(`Sincronização concluída! ${res.totalPipedrive} leads processados. (${res.created} criados, ${res.updated} atualizados)`);
+        mutate();
+    } catch (error) {
+        toast.error("Erro ao sincronizar com Pipedrive.");
+        console.error(error);
+    } finally {
+        setIsExporting(false);
+    }
   };
 
   const handleExport = async () => {
@@ -69,6 +88,7 @@ export default function ExportPage() {
       if (failedCount > 0) toast.error(`${failedCount} falharam.`);
 
       setSelectedIds([]);
+      mutate();
     } catch (error) {
       toast.error("Erro ao exportar leads.");
       console.error(error);
@@ -86,19 +106,28 @@ export default function ExportPage() {
         ]}
       />
 
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="p-6 max-w-4xl mx-auto space-y-6">
+        <div className="flex flex-col gap-4">
           <div>
             <h1 className="text-2xl font-bold">Exportação de Leads</h1>
             <p className="text-muted-foreground">
               Envie seus leads qualificados para o Pipedrive.
             </p>
           </div>
-          <Button 
-            onClick={handleExport} 
-            disabled={isExporting || selectedIds.length === 0}
-            className="bg-green-600 hover:bg-green-700"
-          >
+          <div className="flex flex-col gap-2">
+            <Button
+                variant="outline"
+                onClick={handleSync}
+                disabled={isExporting}
+            >
+                <RefreshCw className={`mr-2 h-4 w-4 ${isExporting ? "animate-spin" : ""}`} />
+                Sincronizar Pipedrive
+            </Button>
+            <Button 
+                onClick={handleExport} 
+                disabled={isExporting || selectedIds.length === 0}
+                className="bg-green-600 hover:bg-green-700"
+            >
             {isExporting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -106,6 +135,7 @@ export default function ExportPage() {
             )}
             Exportar Selecionados ({selectedIds.length})
           </Button>
+        </div>
         </div>
 
         <div className="border rounded-lg bg-card">
@@ -146,7 +176,21 @@ export default function ExportPage() {
                         onCheckedChange={() => toggleSelect(lead._id)}
                       />
                     </TableCell>
-                    <TableCell className="font-medium">{lead.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {lead.pipedriveUrl ? (
+                        <a 
+                          href={lead.pipedriveUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 hover:underline text-blue-600"
+                        >
+                          {lead.name}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        lead.name
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col text-xs text-muted-foreground">
                          <span>{lead.email || "Sem email"}</span>
@@ -155,11 +199,17 @@ export default function ExportPage() {
                     </TableCell>
                     <TableCell>{lead.city || "-"}</TableCell>
                     <TableCell>
-                      {/* Placeholder logic for visual check */}
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <AlertCircle className="w-3 h-3" />
-                        Não verificado
-                      </span>
+                      {lead.pipedriveId ? (
+                        <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Exportado
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <AlertCircle className="w-3 h-3" />
+                          Pendente
+                        </span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

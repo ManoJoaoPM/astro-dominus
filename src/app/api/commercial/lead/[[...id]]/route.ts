@@ -4,16 +4,9 @@ import {
   commercialLeadFormSchema,
   commercialLeadUpdateSchema,
 } from "@/models/commercial/lead/model";
-import { CRUDController } from "@/struct";
-import { ENV } from "@/env";
+import { CRUDController, HookContext } from "@/struct";
 
-function sanitizeCommercialLead(lead: CommercialLeadInterface) {
-  let pipedriveUrl = null;
-  if (lead.pipedriveId && ENV.PIPEDRIVE_COMPANY_DOMAIN) {
-      const domain = ENV.PIPEDRIVE_COMPANY_DOMAIN.replace(/^https?:\/\//, "").replace(/\.pipedrive\.com.*$/, "");
-      pipedriveUrl = `https://${domain}.pipedrive.com/organization/${lead.pipedriveId}`;
-  }
-
+function sanitizeLead(lead: CommercialLeadInterface) {
   return {
     _id: lead._id,
     name: lead.name,
@@ -27,13 +20,11 @@ function sanitizeCommercialLead(lead: CommercialLeadInterface) {
     source: lead.source,
     qualificationStatus: lead.qualificationStatus,
     qualificationNotes: lead.qualificationNotes,
+    potentialService: lead.potentialService,
     scraperJobId: lead.scraperJobId,
     lat: lead.lat,
     lng: lead.lng,
     geocodeStatus: lead.geocodeStatus,
-    pipedriveId: lead.pipedriveId,
-    pipedriveUrl,
-    exportedAt: lead.exportedAt,
     createdAt: lead.createdAt,
     updatedAt: lead.updatedAt,
   } as any;
@@ -49,21 +40,20 @@ export const {
 } = new CRUDController<CommercialLeadInterface>(CommercialLead, {
   createSchema: commercialLeadFormSchema,
   updateSchema: commercialLeadUpdateSchema,
-  softDelete: true,
+  softDelete: false, // Alterado para false para garantir exclusão física por enquanto, ou verificar filtro de deletados no GET
   hooks: {
     beforeSend: async (data) => {
-      if (Array.isArray(data)) return data.map(sanitizeCommercialLead);
+      if (Array.isArray(data)) return data.map(sanitizeLead);
       if (!data) return data;
-      return sanitizeCommercialLead(data as CommercialLeadInterface);
+      return sanitizeLead(data as CommercialLeadInterface);
     },
   },
   roles: {
-    // leitura liberada pra todo mundo do comercial/operacional/admin
     GET: ["admin", "operational", "commercial"],
-    // criação/edição só pra admin + operacional
-    POST: ["admin", "operational"],
-    PATCH: ["admin", "operational"],
-    // exclusão só admin
-    DELETE: ["admin"],
+    POST: ["admin", "operational", "commercial"],
+    PATCH: ["admin", "operational", "commercial"],
+    DELETE: ["admin", "commercial"],
   },
+  // Permite filtrar por scraperJobId na query string e ordenar
+  sort: { createdAt: -1 }
 });

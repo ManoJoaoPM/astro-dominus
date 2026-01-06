@@ -232,7 +232,7 @@ export default function PhaseDetailPage() {
                     <span className="text-xs font-bold uppercase tracking-wider">Critério de Saída</span>
                  </div>
                  <p className="text-lg font-medium leading-tight">
-                    "{data.exitCriteria}"
+                    {data.exitCriteria}
                  </p>
               </div>
 

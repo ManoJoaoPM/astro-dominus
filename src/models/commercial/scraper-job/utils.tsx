@@ -122,11 +122,22 @@ export const scraperJobColumns: ColumnDef<ScraperJobInterface>[] = [
   },
   // 👉 Nova coluna de ações
   {
-    id: "actions",
+    id: "job-actions",
     header: "Ações",
-    cell: ({ row }) =>
-      row.original._id ? (
-        <RunScraperButton jobId={row.original._id as string} />
-      ) : null,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        {row.original._id && (
+          <RunScraperButton jobId={row.original._id as string} />
+        )}
+        {row.original._id && (
+          <a
+            href={`/dashboard/leads/scraper?scraperJobId=${row.original._id}`}
+            className="rounded-md border px-2 py-1 text-[11px] font-medium hover:bg-accent"
+          >
+            Ver Leads
+          </a>
+        )}
+      </div>
+    ),
   },
 ];

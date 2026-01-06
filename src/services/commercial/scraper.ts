@@ -1,9 +1,3 @@
-import axios from "axios";
-import * as cheerio from "cheerio"; // I assume cheerio is available or I should use regex, but cheerio is standard. I'll check package.json later. If not, I'll use regex.
-// Checking package.json... actually I'll use regex for now to avoid dependency issues if not installed, or I'll install it.
-// Given I can't easily install new packages without user permission (though I have permission), 
-// I'll stick to a simple fetch + regex approach for "wa.me" and phone numbers.
-
 export class WebsiteScraper {
   static async findWhatsApp(url: string): Promise<string | null> {
     try {

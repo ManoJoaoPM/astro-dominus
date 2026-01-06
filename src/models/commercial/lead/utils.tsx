@@ -14,7 +14,14 @@ export const commercialLeadColumns: ColumnDef<CommercialLeadInterface>[] = [
   {
     accessorKey: "name",
     header: "Imobiliária",
-    cell: ({ row }) => row.original.name,
+    cell: ({ row }) => (
+      <a
+        href={`/dashboard/leads/${row.original._id}`}
+        className="font-medium hover:underline"
+      >
+        {row.original.name}
+      </a>
+    ),
   },
   {
     accessorKey: "city",
@@ -103,18 +110,21 @@ export const commercialLeadFields: FieldInterface[] = [
     name: "city",
     label: "Cidade",
     type: "text",
+    required: false,
     placeholder: "Ex: São Paulo",
   },
   {
     name: "state",
     label: "Estado",
     type: "text",
+    required: false,
     placeholder: "Ex: SP",
   },
   {
     name: "address",
     label: "Endereço",
     type: "text",
+    required: false,
     placeholder: "Rua, número, bairro...",
     colSpan: 2,
   },
@@ -122,40 +132,47 @@ export const commercialLeadFields: FieldInterface[] = [
     name: "phone",
     label: "Telefone",
     type: "text",
+    required: false,
     placeholder: "Ex: (11) 99999-9999",
   },
   {
     name: "email",
     label: "Email",
     type: "text",
+    required: false,
     placeholder: "contato@imobiliaria.com",
   },
   {
     name: "website",
     label: "Site",
     type: "text",
+    required: false,
     placeholder: "https://imobiliaria.com.br",
   },
   {
     name: "instagram",
     label: "Instagram",
     type: "text",
+    required: false,
     placeholder: "https://instagram.com/imobiliaria",
   },
   {
     name: "qualificationStatus",
     label: "Status de qualificação",
     type: "select",
+    required: true,
     options: [
       { label: "Pendente", value: "pending" },
       { label: "Qualificado", value: "qualified" },
       { label: "Desqualificado", value: "unqualified" },
     ],
+    defaultValue: "pending",
   },
   {
     name: "qualificationNotes",
     label: "Observações de qualificação",
     type: "textarea",
+    required: false,
     placeholder: "Fit ideal para Social Media, anúncios, alto padrão...",
     colSpan: 2,
   },

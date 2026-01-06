@@ -2,6 +2,8 @@ import {
   IconChartFunnel,
   IconDashboard,
   IconFlame,
+  IconSearch,
+  IconShare,
   IconUsers,
 } from "@tabler/icons-react";
 
@@ -18,6 +20,16 @@ export const MENU = {
       title: "Leads",
       url: "/dashboard/leads",
       icon: IconFlame,
+    },
+    {
+      title: "Scraper",
+      url: "/dashboard/leads/scraper",
+      icon: IconSearch,
+    },
+    {
+      title: "Export",
+      url: "/dashboard/leads/export",
+      icon: IconShare,
     },
     {
       title: "Qualificação",
@@ -42,9 +54,19 @@ export const MENU = {
       icon: IconFlame,
     },
     {
+      title: "Scraper",
+      url: "/dashboard/leads/scraper",
+      icon: IconSearch,
+    },
+    {
       title: "Qualificação",
       url: "/dashboard/leads/qualification",
       icon: IconChartFunnel,
+    },
+    {
+      title: "Export",
+      url: "/dashboard/leads/export",
+      icon: IconShare,
     },
     {
       title: "Clientes",

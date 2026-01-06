@@ -32,6 +32,7 @@ const schema = new Schema<CommercialLeadInterface>({
   },
 
   qualificationNotes: { type: String, default: null },
+  potentialService: { type: String, default: null },
 
   scraperJobId: {
     type: Schema.Types.ObjectId,
@@ -43,6 +44,12 @@ const schema = new Schema<CommercialLeadInterface>({
   lat: { type: Number, default: null, index: true },
   lng: { type: Number, default: null, index: true },
   geocodeStatus: { type: String, enum: ["pending","ok","failed"], default: "pending", index: true },
+  
+  rating: { type: Number, default: null },
+  reviews: { type: Number, default: null },
+
+  pipedriveId: { type: Number, default: null, index: true },
+  exportedAt: { type: Date, default: null },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
