@@ -326,12 +326,23 @@ async function runScraperJob(jobId: string, city: string) {
           }
           
           // Update Rating/Reviews if missing
-          if (!existingLead.rating && candidate.item.rating) {
-             existingLead.rating = candidate.item.rating;
+          // Normalize rating object from API
+          // API returns rating: { value: 4.8, votes_count: 100 } or just number sometimes?
+          // Based on error log: { rating_type: 'Max5', value: 5, votes_count: 272, rating_max: null }
+          let ratingValue = candidate.item.rating;
+          let reviewsValue = candidate.item.reviews; // reviews usually holds the count if rating is simple number, but if rating is object, votes_count is there
+
+          if (ratingValue && typeof ratingValue === 'object') {
+             if (ratingValue.value) ratingValue = ratingValue.value;
+             if (ratingValue.votes_count) reviewsValue = ratingValue.votes_count;
+          }
+
+          if (!existingLead.rating && ratingValue) {
+             existingLead.rating = ratingValue;
              needsUpdate = true;
           }
-          if (!existingLead.reviews && candidate.item.reviews) {
-             existingLead.reviews = candidate.item.reviews;
+          if (!existingLead.reviews && reviewsValue) {
+             existingLead.reviews = reviewsValue;
              needsUpdate = true;
           }
           
@@ -344,17 +355,28 @@ async function runScraperJob(jobId: string, city: string) {
           continue;
        }
 
-       await CommercialLead.create({
-         name: candidate.item.title,
-         city: city,
-         address: candidate.item.address,
-         phone: phoneToSave, 
-         website: candidate.website,
-         instagram: finalInstagram,
-         lat: candidate.item.latitude,
-         lng: candidate.item.longitude,
-         scraperJobId: jobId,
-       });
+       // Normalize rating
+        let ratingValue = candidate.item.rating;
+        let reviewsValue = candidate.item.reviews;
+
+        if (ratingValue && typeof ratingValue === 'object') {
+           if (ratingValue.value) ratingValue = ratingValue.value;
+           if (ratingValue.votes_count) reviewsValue = ratingValue.votes_count;
+        }
+
+        await CommercialLead.create({
+          name: candidate.item.title,
+          city: city,
+          address: candidate.item.address,
+          phone: phoneToSave, 
+          website: candidate.website,
+          instagram: finalInstagram,
+          lat: candidate.item.latitude,
+          lng: candidate.item.longitude,
+          rating: ratingValue,
+          reviews: reviewsValue,
+          scraperJobId: jobId,
+        });
        count++;
        //console.log(`[Scraper] Lead salvo: ${candidate.item.title}`);
     }
