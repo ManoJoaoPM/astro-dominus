@@ -18,6 +18,7 @@ interface Lead {
   _id: string;
   name: string;
   email: string;
+  city?: string;
   instagram?: string | null;
   website?: string | null;
   potentialService?: string | null;
@@ -26,12 +27,21 @@ interface Lead {
 export default function LeadQualificationPage() {
   const queryClient = useQueryClient();
 
-  // 1) Buscar só leads com qualificationStatus = pending
-  const { data, isLoading } = useQuery<Lead[]>({
+  const [selectedCity, setSelectedCity] = React.useState<string>("");
+
+  const { data: rawData, isLoading } = useQuery<Lead[]>({
     queryKey: ["leads-qualification"],
     queryFn: () =>
       fetcher("/api/commercial/lead?qualificationStatus=pending") as Promise<Lead[]>,
   });
+
+  const data = React.useMemo(() => {
+    if (!rawData) return [];
+    if (!selectedCity || selectedCity.trim() === "") return rawData;
+    
+    const term = selectedCity.toLowerCase();
+    return rawData.filter(lead => lead.city?.toLowerCase().includes(term));
+  }, [rawData, selectedCity]);
 
   // 2) Mutation para QUALIFICAR / NÃO QUALIFICAR
   const mutation = useMutation({
@@ -96,6 +106,17 @@ export default function LeadQualificationPage() {
         ]}
       />
 
+      <div className="px-4 pt-4 pb-2">
+        <div className="flex items-center gap-2 max-w-sm">
+          <Input
+            placeholder="Filtrar por cidade..."
+            value={selectedCity}
+            onChange={(e) => setSelectedCity(e.target.value)}
+            className="h-9"
+          />
+        </div>
+      </div>
+
       <div className="px-4 py-4 grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
         {isLoading && <div>Carregando leads pendentes...</div>}
 
@@ -140,7 +161,7 @@ function LeadCard({
           {lead.name}
         </CardTitle>
         <p className="text-xs text-muted-foreground break-all">
-          {lead.email}
+          {lead.city}
         </p>
       </CardHeader>
 
