@@ -265,6 +265,9 @@ async function runScraperJob(jobId: string, city: string) {
        }
     }
 
+    // Set para controlar Instagrams duplicados no mesmo lote
+    const seenInstagrams = new Set<string>();
+
     // 4. Consolidação Final e Salvamento
     //console.log(`[Scraper] Iniciando salvamento no banco de dados...`);
     for (const candidate of candidates) {
@@ -278,8 +281,20 @@ async function runScraperJob(jobId: string, city: string) {
        }
 
        // Lógica de Instagram
-       const finalInstagram = candidate.rocketInstagram || 
+       let finalInstagram = candidate.rocketInstagram || 
          (candidate.website && candidate.website.includes("instagram.com") ? candidate.website : null);
+
+       // VERIFICAÇÃO DE INSTAGRAM REPETIDO NO LOTE
+       if (finalInstagram) {
+          if (seenInstagrams.has(finalInstagram)) {
+             // Se já vimos esse Instagram neste lote, assumimos erro do scraper/API e descartamos para este lead
+             // (A menos que seja a mesma empresa, mas por segurança para evitar spam de leads errados, limpamos)
+             //console.log(`[Scraper] Instagram duplicado detectado e ignorado: ${finalInstagram} para ${candidate.item.title}`);
+             finalInstagram = null;
+          } else {
+             seenInstagrams.add(finalInstagram);
+          }
+       }
 
        // Contadores
        if (phoneToSave && phoneToSave !== "0") withPhone++;
@@ -287,15 +302,44 @@ async function runScraperJob(jobId: string, city: string) {
        if (candidate.item.email) withEmail++;
        if (candidate.website) withWebsite++;
 
-       // Unicidade (Adaptada)
+       // Unicidade (Adaptada) - Agora muito mais estrita conforme pedido
        const existingQuery: any[] = [];
+       
+       // 1. Verifica por Website (muito forte)
        if (candidate.website) existingQuery.push({ website: candidate.website });
+       
+       // 2. Verifica por Telefone (forte)
        if (phoneToSave && phoneToSave !== "0") existingQuery.push({ phone: phoneToSave });
+       
+       // 3. Verifica por Instagram (forte)
+       if (finalInstagram) existingQuery.push({ instagram: finalInstagram });
+       
+       // 4. Verifica por Endereço (forte, se exato)
+       if (candidate.item.address) existingQuery.push({ address: candidate.item.address });
+       
+       // 5. Fallback: Nome + Cidade (caso os outros falhem, mas perigoso com abreviações)
+       // Se tivermos qualquer um dos identificadores fortes acima, talvez não precisemos do nome+cidade?
+       // O problema do "BH" vs "Belo Horizonte" é que "Nome + Cidade" falha em pegar o duplicado.
+       // Mas se tiver endereço, site ou instagram, os checks acima pegam.
+       // Mantemos Nome+Cidade apenas se NÃO tivermos nada melhor?
+       // O código original fazia: if (existingQuery.length === 0) ...
+       // Vamos manter essa lógica: se não tem site, nem telefone, nem insta, nem endereço... (o que é raro), tentamos nome+cidade.
        
        if (existingQuery.length === 0) {
           existingQuery.push({ name: candidate.item.title, city: city });
+       } else {
+          // Se já temos critérios fortes, adicionamos também Nome+Cidade como OPÇÃO, 
+          // mas cuidado: se adicionarmos no $or array, ele vai dar match se QUALQUER um bater.
+          // Queremos que se o Site bater, É duplicado. Se o Endereço bater, É duplicado.
+          // Então adicionar mais critérios ao $or AUMENTA a chance de achar duplicado (o que queremos).
+          // Vamos adicionar Nome+Cidade ao array de busca também?
+          // Não, porque "Nome + Cidade" é onde ocorre o erro de "Belo Horizonte" vs "BH".
+          // Se buscarmos por "Nome + BH", não acharemos o lead "Nome + Belo Horizonte".
+          // Então adicionar isso não ajuda a achar o duplicado, só ajuda a achar se for exato.
+          // Vamos manter como fallback.
        }
 
+       // A query é um OR. Se encontrar por Site OU Telefone OU Instagram OU Endereço, retorna.
        const existingLead = await CommercialLead.findOne({ $or: existingQuery });
        if (existingLead) {
           // Check if we need to enrich existing lead
