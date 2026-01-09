@@ -49,6 +49,8 @@ export default function ExportPage() {
   const [createDeal, setCreateDeal] = useState(true);
   const [createActivity, setCreateActivity] = useState(true);
   const [activitySubject, setActivitySubject] = useState("Enviar Primeiro Toque");
+  const [createFollowUp, setCreateFollowUp] = useState(true);
+  const [followUpSubject, setFollowUpSubject] = useState("Enviar Follow UP D+1");
   const [limitQuantity, setLimitQuantity] = useState<number | "">(75);
 
   // Fetch only qualified leads
@@ -232,6 +234,23 @@ export default function ExportPage() {
                                         />
                                     </div>
                                 )}
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                    id="createFollowUp" 
+                                    checked={createFollowUp}
+                                    onCheckedChange={(c) => setCreateFollowUp(!!c)}
+                                />
+                                <Label htmlFor="createFollowUp" className="cursor-pointer">Agendar Atividade de Follow UP</Label>
+                              </div>
+                              {createFollowUp && (
+                                  <div className="space-y-2">
+                                      <Label>Assunto da Atividade de Follow UP</Label>
+                                      <Input 
+                                          value={followUpSubject} 
+                                          onChange={(e) => setFollowUpSubject(e.target.value)}
+                                      />
+                                  </div>
+                              )}
                             </div>
                         )}
                     </div>

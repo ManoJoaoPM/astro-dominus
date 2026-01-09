@@ -44,6 +44,8 @@ export async function POST(req: NextRequest) {
             const batchIndex = Math.floor(processedCount / batchSize);
             const today = new Date();
             const dueDate = addBusinessDays(today, batchIndex);
+            const followUpDate = addBusinessDays(today, batchIndex + 1);
+            const followUpDateStr = followUpDate.toISOString().split("T")[0];
             const dueDateStr = dueDate.toISOString().split("T")[0];
 
             // 1. Check if Organization exists
@@ -110,22 +112,22 @@ export async function POST(req: NextRequest) {
 
                 // Create Person, Deal, Activity
                 
-                // 3. Create Person (Optional)
-                const personName = `Contato - ${lead.name}`;
-                let personId = undefined;
-                try {
-                   // Only create person if we have some contact info? Or always?
-                   // User didn't specify, but good practice.
-                   const person = await PipedriveService.createPerson({
-                      name: personName,
-                      email: lead.email || undefined,
-                      phone: lead.phone || undefined,
-                      org_id: finalOrgId
-                   });
-                   if (person) personId = person.id;
-                } catch (e) {
-                   console.error("Failed to create person linked to org, continuing...", e);
-                }
+                // // 3. Create Person (Optional)
+                // const personName = `Contato - ${lead.name}`;
+                // let personId = undefined;
+                // try {
+                //    // Only create person if we have some contact info? Or always?
+                //    // User didn't specify, but good practice.
+                //    const person = await PipedriveService.createPerson({
+                //       name: personName,
+                //       email: lead.email || undefined,
+                //       phone: lead.phone || undefined,
+                //       org_id: finalOrgId
+                //    });
+                //    if (person) personId = person.id;
+                // } catch (e) {
+                //    console.error("Failed to create person linked to org, continuing...", e);
+                // }
 
                 if (createDeal) {
                     // 4. Create Deal
@@ -135,8 +137,7 @@ export async function POST(req: NextRequest) {
                     }
 
                     const deal = await PipedriveService.createDeal(
-                        `Negócio: ${lead.name}`, 
-                        personId, 
+                        `${lead.name}`,  
                         finalOrgId,
                         dealCustomFields
                     );
@@ -144,12 +145,16 @@ export async function POST(req: NextRequest) {
                     if (deal && deal.id && createActivity) {
                         // 5. Create Activity with Drip Date
                         const subject = config?.activitySubject || "Enviar Primeiro Toque";
+
+                        const followUpSubject = config?.followUpSubject || "Enviar Follow UP D+1";
                         
                         // We need to support due_date in createActivity service
                         // Currently it uses new Date().toISOString() hardcoded.
                         // We need to update PipedriveService.createActivity to accept date.
                         // I will update the service call here assuming I'll fix the service next.
                         await PipedriveService.createActivity(deal.id, subject, dueDateStr);
+                        // 6. Create Follow-Up Activity with Drip Date
+                        await PipedriveService.createActivity(deal.id, followUpSubject, followUpDateStr);
                     }
                 }
             }
