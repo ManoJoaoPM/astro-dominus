@@ -84,13 +84,27 @@ export class PipedriveService {
     if (!API_TOKEN || !COMPANY_DOMAIN) return null;
     try {
       const payload: any = {};
+      // Update logic: only include fields if they are strictly not undefined.
+      // This allows sending "" (empty string) if we genuinely want to clear the field (though usually we don't),
+      // but in our current context we want to avoid overwriting with null/undefined.
+      // However, the caller usually passes data.name which might be null.
+      // Better approach: Check if key exists in data object, or just check for truthy if we never want to clear?
+      // User said: "veio sem os dados ... e forçou o Pipedrive a apagar esses dados".
+      // This means we were sending empty strings.
+      // So we should ONLY send if value is Truthy (or at least not empty string).
+      
       if (data.name) payload.name = data.name;
       if (data.address) payload.address = data.address;
       if (data.website) payload.website = data.website;
 
       // Merge custom fields into payload
+      // Fix: Only add custom fields that have values. Don't overwrite with empty strings.
       if (data.custom_fields) {
-        Object.assign(payload, data.custom_fields);
+        for (const [key, value] of Object.entries(data.custom_fields)) {
+            if (value !== null && value !== "" && value !== undefined) {
+                payload[key] = value;
+            }
+        }
       }
       
       // If payload is empty, nothing to update
@@ -149,14 +163,14 @@ export class PipedriveService {
     }
   }
 
-  static async createActivity(dealId: number, subject: string) {
+  static async createActivity(dealId: number, subject: string, dueDate?: string) {
     if (!API_TOKEN || !COMPANY_DOMAIN) return null;
     try {
       const res = await this.client.post("/activities", {
         subject,
         deal_id: dealId,
         type: "call", // or 'email', 'task'
-        due_date: new Date().toISOString().split("T")[0],
+        due_date: dueDate || new Date().toISOString().split("T")[0],
       });
       return res.data?.data;
     } catch (error: any) {

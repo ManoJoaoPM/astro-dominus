@@ -39,7 +39,14 @@ export async function POST(req: NextRequest) {
         for (const org of allOrgs) {
             const pipedriveId = org.id;
             const name = org.name;
-            const address = org.address;
+            const address = org.address; // Pipedrive standard address
+
+            // Extract Custom Fields
+            const phone = org["9e0029deb374524025c9caeed9ab91c24cc20948"] || null;
+            const email = org["d9fe8d1de74611de9733e9407c9ccfc09f0bdd26"] || null;
+            const instagram = org["05db8ad96887e6e633e689a7bf3d8d303549e97d"] || null;
+            const website = org["959dff9e8e70ad6be476609d021356c00dcaa801"] || null;
+            // Rating/Reviews might be difficult to sync back if format differs, skipping for now to avoid overwriting good data with bad
             
             // Try to find existing lead by Pipedrive ID first
             let lead = await CommercialLead.findOne({ pipedriveId });
@@ -48,6 +55,10 @@ export async function POST(req: NextRequest) {
                 // Update basic info if missing
                 let needsUpdate = false;
                 if (!lead.address && address) { lead.address = address; needsUpdate = true; }
+                if (!lead.phone && phone) { lead.phone = phone; needsUpdate = true; }
+                if (!lead.email && email) { lead.email = email; needsUpdate = true; }
+                if (!lead.instagram && instagram) { lead.instagram = instagram; needsUpdate = true; }
+                if (!lead.website && website) { lead.website = website; needsUpdate = true; }
                 
                 // If user wants to ensure data is synced (e.g. name update), we could do it here
                 // But generally we trust local data unless it's empty
@@ -65,23 +76,28 @@ export async function POST(req: NextRequest) {
                     // Link existing lead to Pipedrive
                     lead.pipedriveId = pipedriveId;
                     lead.exportedAt = new Date(); // It exists there, so consider it exported
+                    
                     if (!lead.address && address) lead.address = address;
+                    if (!lead.phone && phone) lead.phone = phone;
+                    if (!lead.email && email) lead.email = email;
+                    if (!lead.instagram && instagram) lead.instagram = instagram;
+                    if (!lead.website && website) lead.website = website;
                     
                     await lead.save();
                     updatedCount++;
                 } else {
-                    // Create new "Skeleton" lead from Pipedrive?
-                    // User said: "Quero puxar todos os leads do Pipedrive e salvar eles previamente no banco de dados"
-                    // So yes, create new.
-                    
+                    // Create new "Skeleton" lead from Pipedrive
                     await CommercialLead.create({
                         name: name,
                         address: address,
+                        phone: phone,
+                        email: email,
+                        instagram: instagram,
+                        website: website,
                         source: "manual", // or "pipedrive_import"
                         qualificationStatus: "qualified", // Assume if it's in Pipedrive, it's somewhat relevant? Or pending?
                         pipedriveId: pipedriveId,
                         exportedAt: new Date(),
-                        // Add other fields if available in Org custom fields?
                     });
                     createdCount++;
                 }
