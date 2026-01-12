@@ -113,21 +113,21 @@ export async function POST(req: NextRequest) {
                 // Create Person, Deal, Activity
                 
                 // // 3. Create Person (Optional)
-                // const personName = `Contato - ${lead.name}`;
-                // let personId = undefined;
-                // try {
-                //    // Only create person if we have some contact info? Or always?
-                //    // User didn't specify, but good practice.
-                //    const person = await PipedriveService.createPerson({
-                //       name: personName,
-                //       email: lead.email || undefined,
-                //       phone: lead.phone || undefined,
-                //       org_id: finalOrgId
-                //    });
-                //    if (person) personId = person.id;
-                // } catch (e) {
-                //    console.error("Failed to create person linked to org, continuing...", e);
-                // }
+                const personName = `Contato - ${lead.name}`;
+                let personId = undefined;
+                try {
+                   // Only create person if we have some contact info? Or always?
+                   // User didn't specify, but good practice.
+                   const person = await PipedriveService.createPerson({
+                      name: personName,
+                      email: lead.email || undefined,
+                      phone: lead.phone || undefined,
+                      org_id: finalOrgId
+                   });
+                   if (person) personId = person.id;
+                } catch (e) {
+                   console.error("Failed to create person linked to org, continuing...", e);
+                }
 
                 if (createDeal) {
                     // 4. Create Deal
@@ -136,8 +136,10 @@ export async function POST(req: NextRequest) {
                         dealCustomFields["2c4dd0ea375e3c4af42948c3bff5057e16420779"] = lead.rating.toString();
                     }
 
+                    //quero que o orgId do createDeal seja finalOrgId
                     const deal = await PipedriveService.createDeal(
-                        `${lead.name}`,  
+                        `${lead.name}`,
+                        personId,
                         finalOrgId,
                         dealCustomFields
                     );
