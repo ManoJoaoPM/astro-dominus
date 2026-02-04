@@ -19,6 +19,7 @@ import {
 } from "@/models/client/utils";
 import type { ClientInterface } from "@/models/client";
 import type { SocialPostInterface } from "@/models/socialmedia/post";
+import MarketingDashboard from "@/components/dashboard/marketing/marketing-dashboard";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -92,6 +93,9 @@ function ClientPageInner({ clientId }: { clientId: string }) {
         <TabsList className="grid grid-cols-1 w-fit mx-4 h-8">
           <TabsTrigger value="overview" className="px-6 h-6 text-xs">
             Visão geral
+          </TabsTrigger>
+          <TabsTrigger value="marketing" className="px-6 h-6 text-xs">
+            Mídia Paga
           </TabsTrigger>
         </TabsList>
       </SiteHeader>
@@ -297,6 +301,14 @@ function ClientPageInner({ clientId }: { clientId: string }) {
                 </a>
               </div>
             </div>
+          </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="marketing" key="marketing">
+        <div className="px-4 py-4">
+          <div className="max-w-6xl mx-auto">
+             <MarketingDashboard clientId={clientId} />
           </div>
         </div>
       </TabsContent>

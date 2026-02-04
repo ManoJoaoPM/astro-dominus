@@ -17,6 +17,10 @@ export const envSchema = z.object({
   EVOLUTION_APIKEY: z.string().optional(),
   PIPEDRIVE_API_TOKEN: z.string().optional(),
   PIPEDRIVE_COMPANY_DOMAIN: z.string().optional(),
+  META_ACCESS_TOKEN: z.string().optional(),
+  META_AD_ACCOUNT_ID: z.string().optional(),
+  META_APP_ID: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
