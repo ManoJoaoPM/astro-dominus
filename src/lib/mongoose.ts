@@ -9,12 +9,17 @@ const MONGODB_URI = ENV.MONGODB_URI;
 if (!MONGODB_URI) throw new Error("MONGODB_URI não está definida.");
 
 export const getConnection = () => {
-  if (!global.db) {
+  const mustReconnect =
+    !global.db || global.db.readyState === 0 || global.db.readyState === 3;
+
+  if (mustReconnect) {
     console.log("[MongoDB] Conectando ao banco");
     global.db = mongoose.createConnection(MONGODB_URI, {
       dbName: ENV.MONGODB_NAME,
       bufferCommands: false,
       maxPoolSize: 5,
+      serverSelectionTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
     });
   }
 
@@ -29,30 +34,43 @@ export const ObjectId = mongoose.Types.ObjectId;
 export { mongoose, Schema };
 
 // UTILS
-const waitForConnection = (conn: mongoose.Connection, name: string, timeout = 8000) => {
-  return new Promise<void>((resolve, reject) => {
-    // Se já estiver conectado, sai cedo
-    if (conn.readyState === 1) {
-      console.log(`[MongoDB] ${name} já está conectado.`);
-      return resolve();
-    }
-
-    const timer = setTimeout(() => {
-      reject(new Error(`[MongoDB] Timeout ao conectar com ${name} (${timeout}ms)`));
-    }, timeout);
-
-    conn.once("connected", () => {
-      clearTimeout(timer);
-      console.log(`[MongoDB] Conexão ${name} aberta.`);
-      resolve();
+const withTimeout = async <T>(promise: Promise<T>, ms: number, message: string) => {
+  let timer: NodeJS.Timeout | null = null;
+  try {
+    return await new Promise<T>((resolve, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+      promise.then(resolve, reject);
     });
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
 
-    conn.once("error", (err) => {
-      clearTimeout(timer);
-      console.error(`[MongoDB] Erro ao conectar com ${name}:`, err);
-      reject(err);
-    });
-  });
+const waitForConnection = async (
+  conn: mongoose.Connection,
+  name: string,
+  timeout = 30000,
+) => {
+  if (Number(conn.readyState) === 1) {
+    console.log(`[MongoDB] ${name} já está conectado.`);
+    return;
+  }
+
+  const state = Number(conn.readyState);
+  const stateLabel =
+    state === 0 ? "disconnected" : state === 1 ? "connected" : state === 2 ? "connecting" : "disconnecting";
+
+  try {
+    await withTimeout(
+      conn.asPromise().then(() => undefined),
+      timeout,
+      `[MongoDB] Timeout ao conectar com ${name} (${timeout}ms, estado=${stateLabel})`,
+    );
+    console.log(`[MongoDB] Conexão ${name} aberta.`);
+  } catch (err) {
+    console.error(`[MongoDB] Erro ao conectar com ${name} (estado=${stateLabel}):`, err);
+    throw err;
+  }
 };
 
 export const startConnection = async () => {
