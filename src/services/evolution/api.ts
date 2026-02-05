@@ -4,6 +4,7 @@ import { ENV } from "@/env";
 export class EvolutionApi {
   private baseUrl: string;
   private apiKey: string;
+  private http = axios.create({ timeout: 15000 });
 
   constructor() {
     const configuredUrl = ENV.EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
@@ -46,7 +47,7 @@ export class EvolutionApi {
 
   private async get(path: string, opts?: { allow404?: boolean }) {
     try {
-      const response = await axios.get(`${this.baseUrl}${path}`, { headers: this.headers });
+      const response = await this.http.get(`${this.baseUrl}${path}`, { headers: this.headers });
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404 && opts?.allow404) {
@@ -58,7 +59,7 @@ export class EvolutionApi {
 
   private async post(path: string, payload: any) {
     try {
-      const response = await axios.post(`${this.baseUrl}${path}`, payload, { headers: this.headers });
+      const response = await this.http.post(`${this.baseUrl}${path}`, payload, { headers: this.headers });
       return response.data;
     } catch (error: any) {
       throw this.buildError("POST", path, error);
@@ -67,7 +68,7 @@ export class EvolutionApi {
 
   private async delete(path: string) {
     try {
-      const response = await axios.delete(`${this.baseUrl}${path}`, { headers: this.headers });
+      const response = await this.http.delete(`${this.baseUrl}${path}`, { headers: this.headers });
       return response.data;
     } catch (error: any) {
       throw this.buildError("DELETE", path, error);
@@ -87,7 +88,16 @@ export class EvolutionApi {
     }
     
     if (webhookUrl) {
-      await this.setWebhook(instanceName, webhookUrl);
+      try {
+        await this.setWebhook(instanceName, webhookUrl);
+      } catch (err) {
+        try {
+          await this.deleteInstance(instanceName);
+        } catch {
+          // ignore
+        }
+        throw err;
+      }
     }
     
     return data;
@@ -153,20 +163,64 @@ export class EvolutionApi {
 
   // 2. Webhook
   async setWebhook(instanceName: string, webhookUrl: string) {
-    const payload = {
-      url: webhookUrl,
-      enabled: true,
-      webhook_by_events: true,
-      events: [
-        "QRCODE_UPDATED",
-        "MESSAGES_UPSERT",
-        "MESSAGES_UPDATE",
-        "MESSAGES_DELETE",
-        "SEND_MESSAGE",
-        "CONNECTION_UPDATE",
-      ]
+    const events = [
+      "QRCODE_UPDATED",
+      "MESSAGES_UPSERT",
+      "MESSAGES_UPDATE",
+      "MESSAGES_DELETE",
+      "SEND_MESSAGE",
+      "CONNECTION_UPDATE",
+    ];
+
+    const payloadV2 = {
+      webhook: {
+        enabled: true,
+        url: webhookUrl,
+        headers: {},
+        byEvents: true,
+        base64: false,
+        events,
+      },
     };
-    return this.post(`/webhook/set/${instanceName}`, payload);
+
+    try {
+      return await this.post(`/webhook/set/${instanceName}`, payloadV2);
+    } catch (err: any) {
+      const message = String(err?.message || "");
+      const shouldTryLegacy =
+        message.includes("status=404") ||
+        message.includes("Cannot POST") ||
+        message.includes("webhook_by_events") ||
+        message.includes("Unexpected token") ||
+        message.includes("Invalid JSON");
+
+      if (!shouldTryLegacy) throw err;
+
+      const payloadLegacy = {
+        enabled: true,
+        url: webhookUrl,
+        webhook_by_events: true,
+        webhook_base64: false,
+        events,
+      };
+
+      const candidates = [
+        `/webhook/instance/${instanceName}`,
+        `/webhook/instance`,
+        `/webhook/set/${instanceName}`,
+      ];
+
+      let lastErr: any = null;
+      for (const path of candidates) {
+        try {
+          return await this.post(path, payloadLegacy);
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      throw lastErr ?? err;
+    }
   }
 
   async findWebhook(instanceName: string) {

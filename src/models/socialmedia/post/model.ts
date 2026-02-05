@@ -18,7 +18,7 @@ const schema = new Schema<SocialPostInterface>({
   publishDate: { type: Date, required: true },
 
   contentFolderUrl: { type: String, default: null },
-  coverUrl: { type: String, default: null },
+  mediaUrls: { type: [String], default: [] },
 
   status: {
     type: String,

@@ -13,6 +13,9 @@ export interface ConversationInterface {
   unreadCount: number;
   
   source: "Orgânico" | "Google Ads" | "Meta Ads" | "Não identificado";
+  metaAdsCtwaClid?: string;
+  metaAdsSourceId?: string;
+  metaAdsShowAdAttribution?: boolean;
   isPinned: boolean;
   firstContactAt?: Date;
   lastMessagePreview?: string;
@@ -28,6 +31,9 @@ export const conversationSchema = z.object({
   lastMessageContent: z.string().optional(),
   unreadCount: z.number().default(0),
   source: z.enum(["Orgânico", "Google Ads", "Meta Ads", "Não identificado"]).default("Não identificado"),
+  metaAdsCtwaClid: z.string().optional(),
+  metaAdsSourceId: z.string().optional(),
+  metaAdsShowAdAttribution: z.boolean().optional(),
   isPinned: z.boolean().default(false),
   firstContactAt: z.date().optional(),
   lastMessagePreview: z.string().optional(),

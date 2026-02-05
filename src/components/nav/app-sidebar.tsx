@@ -6,6 +6,7 @@ import { useAuth } from "@/services/auth/session";
 import * as React from "react";
 import { MENU } from "@/components/nav/items";
 import { ENV } from "@/env";
+import Image from "next/image";
 
 import {
   SidebarMenuButton,
@@ -31,10 +32,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5 justify-center"
+              className="data-[slot=sidebar-menu-button]:!p-1.5 justify-start"
             >
-              <a href="/dashboard">
-                <span className="text-base font-semibold">{ENV.NEXT_PUBLIC_APP_NAME}</span>
+              <a href="/dashboard" className="hover:bg-transparent">
+                <div className="flex items-start justify-start gap-3 px-2">
+                  <Image
+                    src="/logo-dark.png"
+                    alt="Dominus Marketing"
+                    width={140}
+                    height={36}
+                    className="hidden light:block h-7 w-auto"
+                    priority
+                  />
+                  <Image
+                    src="/logo-light.png"
+                    alt="Dominus Marketing"
+                    width={140}
+                    height={36}
+                    className="block light:hidden h-7 w-auto"
+                    priority
+                  />
+                </div>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

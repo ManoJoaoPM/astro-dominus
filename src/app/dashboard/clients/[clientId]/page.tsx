@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
-
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { SiteHeader } from "@/components/site-header";
 
 import {
   ModalForm,
@@ -20,6 +17,27 @@ import {
 import type { ClientInterface } from "@/models/client";
 import type { SocialPostInterface } from "@/models/socialmedia/post";
 import MarketingDashboard from "@/components/dashboard/marketing/marketing-dashboard";
+import Link from "next/link";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowRight,
+  Building2,
+  ChevronRight,
+  Edit3,
+  FileText,
+  LayoutGrid,
+  Mail,
+  MapPin,
+  Phone,
+  ThumbsDown,
+  ThumbsUp,
+  User as UserIcon,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -43,7 +61,6 @@ function ClientPageInner({ clientId }: { clientId: string }) {
   const title = loadingClient ? "Carregando..." : client?.name ?? "Cliente";
   const approvalToken = client?.approvalToken;
 
-  // 👉 Contadores de posts por status
   const {
     totalPosts,
     pendingPosts,
@@ -82,238 +99,194 @@ function ClientPageInner({ clientId }: { clientId: string }) {
     };
   }, [posts]);
 
+  const statusBadge = (status?: string) => {
+    if (status === "active") return { label: "Ativo", className: "bg-emerald-600 text-white" };
+    if (status === "paused") return { label: "Pausado", className: "bg-amber-600 text-white" };
+    if (status === "closed") return { label: "Encerrado", className: "bg-red-600 text-white" };
+    return { label: "Sem status", className: "bg-muted text-muted-foreground" };
+  };
+
+  const badge = statusBadge(client?.status as any);
+
   return (
     <Tabs onValueChange={setTab} value={tab} className="w-full">
-      <SiteHeader
-        heading={[
-          { link: "/dashboard/clients", label: "Clientes" },
-          { link: "#", label: title },
-        ]}
-      >
-        <TabsList className="grid grid-cols-1 w-fit mx-4 h-8">
-          <TabsTrigger value="overview" className="px-6 h-6 text-xs">
-            Visão geral
-          </TabsTrigger>
-          <TabsTrigger value="marketing" className="px-6 h-6 text-xs">
-            Mídia Paga
-          </TabsTrigger>
-        </TabsList>
-      </SiteHeader>
-
-      <TabsContent value="overview" key="overview">
-        <div className="px-4 py-4">
-          <div className="max-w-6xl mx-auto space-y-6">
-            {/* Cabeçalho */}
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold">{title}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Visão geral operacional do cliente dentro do Astro Dominus.
-                </p>
+      <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
+        <div className="px-6 py-4 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                <Link href="/dashboard">Dashboard</Link>
+                <ChevronRight className="w-3 h-3" />
+                <Link href="/dashboard/clients">Clientes</Link>
+                <ChevronRight className="w-3 h-3" />
+                <span className="text-foreground font-medium">{title}</span>
               </div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{title}</h1>
+                <Badge className={badge.className}>{badge.label}</Badge>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Visão geral operacional do cliente dentro do Astro Dominus.
+              </p>
+            </div>
 
-              <button
-                onClick={() => openModal({ 
-                  modalId: "client-edit", // 👈 TEM que bater com o modalId do ModalForm
-                  id: clientId,           // para o ModalForm saber que é edição
-                  defaultValues: client,  // opcional: já preenche o form com os dados carregados
-                 })}
-                className="rounded-md border px-3 py-2 text-xs md:text-sm font-medium hover:bg-accent"
+            <div className="flex items-center gap-3">
+              <div className="flex bg-muted p-1 rounded-lg">
+                <TabsList className="bg-transparent p-0 h-auto">
+                  <TabsTrigger value="overview" className="px-4 h-8">
+                    Visão geral
+                  </TabsTrigger>
+                  <TabsTrigger value="marketing" className="px-4 h-8">
+                    Mídia Paga
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() =>
+                  openModal({
+                    modalId: "client-edit",
+                    id: clientId,
+                    defaultValues: client,
+                  })
+                }
                 disabled={loadingClient || !client}
               >
-                Editar dados do cliente
-              </button>
+                <Edit3 className="w-4 h-4" /> Editar dados do cliente
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <TabsContent value="overview" key="overview">
+        <main className="px-6 py-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-4 space-y-6">
+              <Card className="overflow-hidden border-none shadow-sm bg-gradient-to-br from-card to-secondary/20">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <UserIcon className="w-5 h-5 text-primary" /> Dados do Cliente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <DataRow icon={Building2} label="Nicho" value={client?.niche || "—"} />
+                    <DataRow
+                      icon={MapPin}
+                      label="Local"
+                      value={client?.city && client?.state ? `${client.city} - ${client.state}` : client?.city || "—"}
+                    />
+                    <DataRow icon={UserIcon} label="Responsável" value={client?.responsible || "—"} />
+                    <DataRow icon={Mail} label="E-mail" value={client?.email || "—"} />
+                    <DataRow icon={Phone} label="WhatsApp" value={client?.whatsapp || "—"} />
+                  </div>
+
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                      Observações Internas
+                    </p>
+                    <p className="text-sm text-muted-foreground italic">—</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* PRIMEIRA LINHA – Dados + Resumo operacional */}
-            <div className="grid gap-6 lg:grid-cols-3">
-              {/* Card de informações do cliente */}
-              <div className="lg:col-span-2 rounded-xl border bg-card p-5 space-y-4">
-                <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {client?.name ?? "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {client?.city && client?.state
-                        ? `${client.city} - ${client.state}`
-                        : client?.city ?? "Cidade não informada"}
-                    </p>
-                    {client?.niche && (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Nicho: {client.niche}
-                      </p>
-                    )}
+            <div className="lg:col-span-8 space-y-6">
+              <Card className="border-none shadow-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">Resumo operacional</CardTitle>
+                      <CardDescription>
+                        Visão rápida dos conteúdos de Social Media criados para este cliente.
+                      </CardDescription>
+                    </div>
                   </div>
-
-                  <span className="self-start text-xs rounded-full border px-2 py-1 text-muted-foreground">
-                    {client?.status === "active"
-                      ? "Ativo"
-                      : client?.status === "paused"
-                      ? "Pausado"
-                      : client?.status === "closed"
-                      ? "Encerrado"
-                      : "Sem status"}
-                  </span>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1 text-xs">
-                    <p className="font-medium">Responsável</p>
-                    <p className="text-muted-foreground">
-                      {client?.responsible ?? "Não informado"}
-                    </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <MiniMetricCard
+                      icon={FileText}
+                      label="Posts cadastrados"
+                      value={loadingPosts ? "…" : String(totalPosts)}
+                      variant="primary"
+                    />
+                    <MiniMetricCard
+                      icon={FileText}
+                      label="Aguardando aprovação"
+                      value={loadingPosts ? "…" : String(pendingPosts)}
+                      variant="warning"
+                    />
+                    <MiniMetricCard
+                      icon={ThumbsUp}
+                      label="Aprovados"
+                      value={loadingPosts ? "…" : String(approvedPosts)}
+                      variant="success"
+                    />
+                    <MiniMetricCard
+                      icon={ThumbsDown}
+                      label="Reprovados / revisão"
+                      value={loadingPosts ? "…" : String(rejectedPosts + revisionPosts)}
+                      variant="destructive"
+                    />
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="space-y-1 text-xs">
-                    <p className="font-medium">E-mail</p>
-                    <p className="text-muted-foreground">
-                      {client?.email ?? "Não informado"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-1 text-xs">
-                    <p className="font-medium">WhatsApp</p>
-                    <p className="text-muted-foreground">
-                      {client?.whatsapp ?? "Não informado"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-1 text-xs">
-                    <p className="font-medium">Observações internas</p>
-                    <p className="text-muted-foreground">
-                      {/* Campo futuro: notes */}
-                      —
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card de resumo operacional – com contadores */}
-              <div className="rounded-xl border bg-card p-5 text-xs space-y-3">
-                <p className="text-sm font-semibold">Resumo operacional</p>
-                <p className="text-muted-foreground">
-                  Visão rápida dos conteúdos de Social Media criados para este cliente.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t">
-                  <div className="rounded-lg border bg-background p-2 flex flex-col gap-1">
-                    <p className="text-[10px] text-muted-foreground">
-                      Posts cadastrados
-                    </p>
-                    <p className="text-lg font-semibold">
-                      {loadingPosts ? "…" : totalPosts}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border bg-background p-2 flex flex-col gap-1">
-                    <p className="text-[10px] text-muted-foreground">
-                      Aguardando aprovação
-                    </p>
-                    <p className="text-lg font-semibold">
-                      {loadingPosts ? "…" : pendingPosts}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border bg-background p-2 flex flex-col gap-1">
-                    <p className="text-[10px] text-muted-foreground">
-                      Aprovados
-                    </p>
-                    <p className="text-lg font-semibold text-emerald-600">
-                      {loadingPosts ? "…" : approvedPosts}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border bg-background p-2 flex flex-col gap-1">
-                    <p className="text-[10px] text-muted-foreground">
-                      Reprovados / revisão
-                    </p>
-                    <p className="text-lg font-semibold text-red-600">
-                      {loadingPosts ? "…" : rejectedPosts + revisionPosts}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* SEGUNDA LINHA – Atalhos operacionais */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <section className="space-y-4">
                 <div>
-                  <h2 className="text-lg font-semibold">Painel operacional</h2>
-                  <p className="text-xs text-muted-foreground">
+                  <h3 className="text-xl font-bold">Painel operacional</h3>
+                  <p className="text-sm text-muted-foreground">
                     Acesse rapidamente os módulos de Social Media do Astro Dominus para este cliente.
                   </p>
                 </div>
-              </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <a
-                  href={`/dashboard/clients/${clientId}/posts`}
-                  className="group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left hover:bg-accent/40 transition"
-                >
-                  <span className="text-sm font-semibold">Posts</span>
-                  <p className="text-xs text-muted-foreground">
-                    Gerencie os posts deste cliente: criação, legenda, datas e status.
-                  </p>
-                  <span className="mt-auto text-xs font-medium text-primary group-hover:underline">
-                    Acessar posts
-                  </span>
-                </a>
-
-                <a
-                  href={`/aprovacao/${approvalToken}`}
-                  className="group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left hover:bg-accent/40 transition"
-                >
-                  <span className="text-sm font-semibold">Link de aprovação</span>
-                  <p className="text-xs text-muted-foreground">
-                    Página pública onde o cliente aprova ou recusa os conteúdos.
-                  </p>
-                  <span className="mt-auto text-xs font-medium text-primary group-hover:underline">
-                    Ver aprovação
-                  </span>
-                </a>
-
-                <a
-                  href={`/timeline/${approvalToken}`}
-                  className="group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left hover:bg-accent/40 transition"
-                >
-                  <span className="text-sm font-semibold">Link de Timeline</span>
-                  <p className="text-xs text-muted-foreground">
-                    Página pública onde o cliente vê todas as publicações aprovadas por eles.
-                  </p>
-                  <span className="mt-auto text-xs font-medium text-primary group-hover:underline">
-                    Ver timeline
-                  </span>
-                </a>
-
-                <a
-                  href={`/dashboard/clients/${clientId}/posts?tab=cards`}
-                  className="group flex flex-col gap-2 rounded-xl border bg-card p-4 text-left hover:bg-accent/40 transition"
-                >
-                  <span className="text-sm font-semibold">Cards</span>
-                  <p className="text-xs text-muted-foreground">
-                    Visualize os posts com descrição interna, status e feedbacks do cliente.
-                  </p>
-                  <span className="mt-auto text-xs font-medium text-primary group-hover:underline">
-                    Ver cards
-                  </span>
-                </a>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <ActionCard
+                    icon={LayoutGrid}
+                    title="Posts"
+                    description="Gerencie os posts deste cliente: criação, legenda, datas e status."
+                    cta="Acessar posts"
+                    href={`/dashboard/clients/${clientId}/posts`}
+                  />
+                  <ActionCard
+                    icon={FileText}
+                    title="Link de aprovação"
+                    description="Página pública onde o cliente aprova ou recusa os conteúdos."
+                    cta="Ver aprovação"
+                    href={approvalToken ? `/aprovacao/${approvalToken}` : undefined}
+                    disabled={!approvalToken}
+                  />
+                  <ActionCard
+                    icon={FileText}
+                    title="Link de Timeline"
+                    description="Página pública onde o cliente vê todas as publicações aprovadas por eles."
+                    cta="Ver timeline"
+                    href={approvalToken ? `/timeline/${approvalToken}` : undefined}
+                    disabled={!approvalToken}
+                  />
+                  <ActionCard
+                    icon={IconBrandWhatsapp}
+                    title="Whatsapp"
+                    description="Conecte Whatsapps e observe as conversas com os leads"
+                    cta="Ver Whatsapp"
+                    href={`/dashboard/clients/${clientId}/whatsapp`}
+                  />
+                </div>
+              </section>
             </div>
           </div>
-        </div>
+        </main>
       </TabsContent>
 
       <TabsContent value="marketing" key="marketing">
-        <div className="px-4 py-4">
-          <div className="max-w-6xl mx-auto">
-             <MarketingDashboard clientId={clientId} />
-          </div>
+        <div className="px-6 py-8">
+          <MarketingDashboard clientId={clientId} />
         </div>
       </TabsContent>
 
-      {/* Modal de edição do cliente */}
       <ModalForm
         schema={clientFormSchema}
         fields={clientFields}
@@ -324,6 +297,99 @@ function ClientPageInner({ clientId }: { clientId: string }) {
         cols={2}
       />
     </Tabs>
+  );
+}
+
+function DataRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="w-4 h-4" />
+        <span className="text-sm">{label}</span>
+      </div>
+      <span className="text-sm font-medium">{value}</span>
+    </div>
+  );
+}
+
+function MiniMetricCard({
+  icon: Icon,
+  label,
+  value,
+  variant,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  variant: "primary" | "warning" | "success" | "destructive";
+}) {
+  const map: Record<string, string> = {
+    primary: "bg-primary/10 text-primary border-primary/20",
+    warning: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+    success: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
+    destructive: "bg-red-500/10 text-red-700 border-red-500/20",
+  };
+
+  return (
+    <div className={cn("p-4 rounded-xl border text-center space-y-1", map[variant])}>
+      <Icon className="w-4 h-4 mx-auto opacity-70" />
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-[10px] uppercase font-bold tracking-tight opacity-80 leading-none">{label}</p>
+    </div>
+  );
+}
+
+function ActionCard({
+  icon: Icon,
+  title,
+  description,
+  cta,
+  href,
+  disabled,
+}: {
+  icon: any;
+  title: string;
+  description: string;
+  cta: string;
+  href?: string;
+  disabled?: boolean;
+}) {
+  const content = (
+    <CardContent className="p-5 flex flex-col h-full">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-2 bg-background rounded-lg transition-colors group-hover:bg-primary/10">
+          <Icon className="w-5 h-5 text-primary" />
+        </div>
+        <h4 className="font-bold">{title}</h4>
+      </div>
+      <p className="text-sm text-muted-foreground flex-1 mb-4 leading-relaxed">{description}</p>
+      <Button
+        variant="ghost"
+        className={cn(
+          "w-full justify-between transition-all h-9 group-hover:bg-primary group-hover:text-primary-foreground",
+          disabled && "opacity-60 pointer-events-none",
+        )}
+      >
+        {cta}
+        <ArrowRight className="w-4 h-4" />
+      </Button>
+    </CardContent>
+  );
+
+  if (href && !disabled) {
+    return (
+      <Link href={href}>
+        <Card className="group hover:border-primary/50 transition-all cursor-pointer border-none shadow-sm bg-secondary/30">
+          {content}
+        </Card>
+      </Link>
+    );
+  }
+
+  return (
+    <Card className={cn("group border-none shadow-sm bg-secondary/30", disabled ? "opacity-70" : "hover:border-primary/50 transition-all")}>
+      {content}
+    </Card>
   );
 }
 

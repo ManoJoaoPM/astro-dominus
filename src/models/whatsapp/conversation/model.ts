@@ -15,6 +15,9 @@ const schema = new Schema<ConversationInterface>(
     unreadCount: { type: Number, default: 0 },
     
     source: { type: String, enum: ["Orgânico", "Google Ads", "Meta Ads", "Não identificado"], default: "Não identificado" },
+    metaAdsCtwaClid: { type: String },
+    metaAdsSourceId: { type: String },
+    metaAdsShowAdAttribution: { type: Boolean },
     isPinned: { type: Boolean, default: false },
     firstContactAt: { type: Date },
     lastMessagePreview: { type: String },

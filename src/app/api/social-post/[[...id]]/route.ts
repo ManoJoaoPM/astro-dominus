@@ -16,7 +16,7 @@ function sanitizeSocialPost(post: SocialPostInterface) {
     caption: post.caption,
     publishDate: post.publishDate,
     contentFolderUrl: post.contentFolderUrl,
-    coverUrl: post.coverUrl,
+    mediaUrls: post.mediaUrls,
     status: post.status,
     rejectionReason: post.rejectionReason,
     revisionRequest: post.revisionRequest,

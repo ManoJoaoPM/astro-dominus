@@ -408,9 +408,15 @@ function ChatMessages({ threadId }: { threadId: string }) {
                     </div>
                   )}
 
-                  <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                    {msg.content || (msg.mediaMeta?.filename ? `Arquivo: ${msg.mediaMeta.filename}` : "Mídia enviada")}
-                  </p>
+                  {msg.messageType === "audio" && msg.mediaUrl ? (
+                    <div className="mt-1">
+                      <audio controls preload="none" src={msg.mediaUrl} className="w-[260px] max-w-full" />
+                    </div>
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                      {msg.content || (msg.mediaMeta?.filename ? `Arquivo: ${msg.mediaMeta.filename}` : "Mídia enviada")}
+                    </p>
+                  )}
 
                   <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 opacity-70`}>
                     <Clock size={10} />

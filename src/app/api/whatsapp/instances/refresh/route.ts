@@ -55,8 +55,13 @@ export async function GET(req: Request) {
               }
               const webhookUrl = `${appUrl}/api/webhooks/evolution`;
               const currentWebhook = await evolution.findWebhook(instance.instanceName);
-              
-              if (!currentWebhook || currentWebhook.url !== webhookUrl) {
+              const currentUrl =
+                currentWebhook?.url ||
+                currentWebhook?.webhook?.url ||
+                currentWebhook?.instance?.webhook?.url ||
+                currentWebhook?.data?.webhook?.url;
+
+              if (!currentWebhook || currentUrl !== webhookUrl) {
                 console.log(`[Refresh] Ajustando webhook para ${instance.instanceName}`);
                 await evolution.setWebhook(instance.instanceName, webhookUrl);
               }

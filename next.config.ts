@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
 
   // 🔹 Você já usa isso pro Struct
   transpilePackages: ["@discovery-solutions/struct"],
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "drive.usercontent.google.com" },
+      { protocol: "https", hostname: "drive.google.com" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    ],
+  },
 
   webpack(config) {
     config.resolve.alias = {

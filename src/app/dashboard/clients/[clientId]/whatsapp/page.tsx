@@ -24,7 +24,7 @@ import { toast } from "sonner";
 
 export default function WhatsAppsPage({ params: paramsPromise }: { params: Promise<{ clientId: string }> }) {
   const { clientId } = use(paramsPromise);
-  const { data: instances, mutate, isLoading } = useSWR<any>(`/api/whatsapp/instances/refresh?clientId=${clientId}`, fetcher);
+  const { data: instances, mutate, isLoading, error } = useSWR<any>(`/api/whatsapp/instances/refresh?clientId=${clientId}`, fetcher);
 
   const list = instances?.data || instances || [];
 
@@ -42,6 +42,19 @@ export default function WhatsAppsPage({ params: paramsPromise }: { params: Promi
   };
 
   if (isLoading) return <div className="p-8 text-center">Carregando WhatsApps...</div>;
+  if (error) {
+    return (
+      <div className="p-8 text-center space-y-3">
+        <div>Falha ao carregar WhatsApps.</div>
+        <div className="text-sm text-muted-foreground">{String(error?.message || error)}</div>
+        <div>
+          <Button variant="outline" onClick={() => mutate()}>
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -62,7 +75,6 @@ export default function WhatsAppsPage({ params: paramsPromise }: { params: Promi
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-lg">{instance.instanceName}</CardTitle>
-                  <CardDescription>{instance.phoneNumber || "Sem número"}</CardDescription>
                 </div>
                 <StatusBadge status={instance.status} />
               </div>

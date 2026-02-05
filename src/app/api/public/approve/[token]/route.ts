@@ -53,7 +53,7 @@ export async function GET(
       caption: p.caption,
       publishDate: p.publishDate,
       contentFolderUrl: p.contentFolderUrl ?? null,
-      coverUrl: p.coverUrl ?? null,
+      mediaUrls: Array.isArray(p.mediaUrls) ? p.mediaUrls : [],
       status: p.status,
     })),
   });

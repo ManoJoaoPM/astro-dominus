@@ -26,7 +26,7 @@ export interface SocialPostInterface {
   publishDate: Date;
 
   contentFolderUrl?: string | null;
-  coverUrl?: string | null;
+  mediaUrls?: string[];
 
   status: SocialPostStatus;
 
@@ -48,25 +48,54 @@ export const socialPostFormSchema = z.object({
   format: z.enum(["carousel", "reels", "static", "video", "ad", "other"]),
   title: z.string().min(2, { message: "Título deve ter pelo menos 2 caracteres." }),
 
-  internalNotes: z.string().optional().or(z.literal("")),
+  internalNotes: z.preprocess(
+    (val) => (val == null ? "" : val),
+    z.string().optional().or(z.literal("")),
+  ),
   caption: z.string().min(2, { message: "Legenda é obrigatória." }),
 
   // coerce: aceita string e transforma em Date
   publishDate: z.coerce.date(),
 
-  contentFolderUrl: z.string().url("URL inválida").optional().or(z.literal("")),
-  coverUrl: z.string().url("URL inválida").optional().or(z.literal("")),
+  contentFolderUrl: z.preprocess(
+    (val) => (val == null ? "" : val),
+    z.string().url("URL inválida").optional().or(z.literal("")),
+  ),
+  mediaUrls: z
+    .preprocess((val) => {
+      if (val == null) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === "string") {
+        const raw = val.trim();
+        if (!raw) return [];
+        return raw
+          .split(/[\n,]/g)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return [];
+    }, z.array(z.string().url("URL inválida")))
+    .optional(),
 
   status: z
     .enum(["pending", "approved", "rejected", "revision_sent"])
     .default("pending")
     .optional(),
 
-  rejectionReason: z.string().optional().or(z.literal("")),
-  revisionRequest: z.string().optional().or(z.literal("")),
+  rejectionReason: z.preprocess(
+    (val) => (val == null ? "" : val),
+    z.string().optional().or(z.literal("")),
+  ),
+  revisionRequest: z.preprocess(
+    (val) => (val == null ? "" : val),
+    z.string().optional().or(z.literal("")),
+  ),
 
   publicApprovalEnabled: z.boolean().optional(),
-  publicApprovalToken: z.string().optional().or(z.literal("")),
+  publicApprovalToken: z.preprocess(
+    (val) => (val == null ? "" : val),
+    z.string().optional().or(z.literal("")),
+  ),
   publicApprovalExpiresAt: z.coerce.date().optional(),
 
 });
