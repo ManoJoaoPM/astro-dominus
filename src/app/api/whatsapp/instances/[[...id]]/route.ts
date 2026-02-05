@@ -3,6 +3,7 @@ import { CRUDController } from "@/struct";
 import { EvolutionApi } from "@/services/evolution/api";
 import { nanoid } from "nanoid";
 import { ObjectId } from "@/lib/mongoose";
+import { ENV } from "@/env";
 
 const evolution = new EvolutionApi();
 
@@ -43,25 +44,41 @@ export const {
       const instanceName = `client-${data.clientId}-${nanoid(6)}`;
       
       // We assume the app URL is available in ENV for webhook
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+      const appUrl = ENV.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL;
       if (!appUrl) {
         throw new Error("NEXT_PUBLIC_APP_URL não configurada. Necessária para receber mensagens via webhook.");
+      }
+      if ((ENV.NODE_ENV || process.env.NODE_ENV) !== "development" && /^https?:\/\/localhost\b/i.test(appUrl)) {
+        throw new Error("NEXT_PUBLIC_APP_URL aponta para localhost. Em produção, use a URL pública do seu app.");
       }
       const webhookUrl = `${appUrl}/api/webhooks/evolution`;
       
       console.log("[API] Creating instance with Evolution:", instanceName);
       const createRes = await evolution.createInstance(instanceName, webhookUrl);
+      if (!createRes) {
+        throw new Error("Evolution API retornou resposta vazia ao criar a instância.");
+      }
       console.log("[API] Instance created response:", createRes);
       
       // 2. Fetch QR Code immediately
       console.log("[API] Connecting instance:", instanceName);
       const connectionData = await evolution.connectInstance(instanceName);
+      if (!connectionData) {
+        throw new Error("Evolution API retornou resposta vazia ao conectar a instância.");
+      }
       console.log("[API] Connection data received:", JSON.stringify(connectionData, null, 2));
       
       data.instanceName = instanceName;
       data.status = "connecting";
       // Handle different Evolution API response formats
-      data.qrCode = connectionData?.qrcode?.base64 || connectionData?.base64 || connectionData?.qrcode; 
+      data.qrCode =
+        connectionData?.qrcode?.base64 ||
+        connectionData?.qrcode?.qrcode ||
+        connectionData?.qrcode?.code ||
+        connectionData?.base64 ||
+        connectionData?.qrCode ||
+        connectionData?.qr ||
+        connectionData?.qrcode;
       console.log("[API] Extracted QR Code length:", data.qrCode?.length);
       
       return data;

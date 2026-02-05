@@ -1,12 +1,31 @@
 import axios from "axios";
+import { ENV } from "@/env";
 
 export class EvolutionApi {
   private baseUrl: string;
   private apiKey: string;
 
   constructor() {
-    this.baseUrl = (process.env.EVOLUTION_API_URL || "http://localhost:8080").replace(/\/$/, "");
-    this.apiKey = process.env.EVOLUTION_API_KEY || "";
+    const configuredUrl = ENV.EVOLUTION_API_URL || process.env.EVOLUTION_API_URL;
+    const configuredKey = ENV.EVOLUTION_API_KEY || ENV.EVOLUTION_APIKEY || process.env.EVOLUTION_API_KEY || process.env.EVOLUTION_APIKEY;
+
+    if (!configuredUrl) {
+      if ((ENV.NODE_ENV || process.env.NODE_ENV) === "development") {
+        this.baseUrl = "http://localhost:8080";
+      } else {
+        throw new Error("EVOLUTION_API_URL não configurada. Em produção, a API da Evolution não pode ser 'localhost'.");
+      }
+    } else {
+      this.baseUrl = configuredUrl;
+    }
+
+    this.baseUrl = this.normalizeUrl(this.baseUrl);
+    this.apiKey = configuredKey || "";
+  }
+
+  private normalizeUrl(input: string) {
+    const trimmed = String(input || "").trim().replace(/^['"`\s]+|['"`\s]+$/g, "");
+    return trimmed.replace(/\/$/, "");
   }
 
   private get headers() {
@@ -17,15 +36,23 @@ export class EvolutionApi {
   }
 
   // Generic request helpers
-  private async get(path: string) {
+  private buildError(method: string, path: string, error: any) {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const statusLabel = status ? `status=${status}` : "status=unknown";
+    const dataLabel = data ? ` response=${JSON.stringify(data).slice(0, 400)}` : "";
+    return new Error(`[EvolutionApi] ${method} ${this.baseUrl}${path} falhou (${statusLabel}). Verifique EVOLUTION_API_URL/EVOLUTION_API_KEY.${dataLabel}`);
+  }
+
+  private async get(path: string, opts?: { allow404?: boolean }) {
     try {
       const response = await axios.get(`${this.baseUrl}${path}`, { headers: this.headers });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 404) {
+      if (error.response?.status === 404 && opts?.allow404) {
         return null;
       }
-      throw error;
+      throw this.buildError("GET", path, error);
     }
   }
 
@@ -34,10 +61,7 @@ export class EvolutionApi {
       const response = await axios.post(`${this.baseUrl}${path}`, payload, { headers: this.headers });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null;
-      }
-      throw error;
+      throw this.buildError("POST", path, error);
     }
   }
 
@@ -46,10 +70,7 @@ export class EvolutionApi {
       const response = await axios.delete(`${this.baseUrl}${path}`, { headers: this.headers });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 404) {
-        return null;
-      }
-      throw error;
+      throw this.buildError("DELETE", path, error);
     }
   }
 
@@ -61,6 +82,9 @@ export class EvolutionApi {
       integration: "WHATSAPP-BAILEYS",
     };
     const data = await this.post("/instance/create", payload);
+    if (!data) {
+      throw new Error("[EvolutionApi] Resposta vazia ao criar instância. Verifique EVOLUTION_API_URL/EVOLUTION_API_KEY.");
+    }
     
     if (webhookUrl) {
       await this.setWebhook(instanceName, webhookUrl);
@@ -82,7 +106,7 @@ export class EvolutionApi {
 
     for (const path of candidates) {
       try {
-        const res = await this.get(path);
+        const res = await this.get(path, { allow404: true });
         if (res) return res;
       } catch {
         // ignore
@@ -146,7 +170,7 @@ export class EvolutionApi {
   }
 
   async findWebhook(instanceName: string) {
-    return this.get(`/webhook/find/${instanceName}`);
+    return this.get(`/webhook/find/${instanceName}`, { allow404: true });
   }
 
   // 3. Chat & Messages

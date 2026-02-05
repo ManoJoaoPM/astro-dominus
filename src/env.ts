@@ -14,6 +14,8 @@ export const envSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string(),
   NEXT_PUBLIC_APP_URL: z.string(),
   DFS_API_KEY: z.string().optional(),
+  EVOLUTION_API_URL: z.string().optional(),
+  EVOLUTION_API_KEY: z.string().optional(),
   EVOLUTION_APIKEY: z.string().optional(),
   PIPEDRIVE_API_TOKEN: z.string().optional(),
   PIPEDRIVE_COMPANY_DOMAIN: z.string().optional(),

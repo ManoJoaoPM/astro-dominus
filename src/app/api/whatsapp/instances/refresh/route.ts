@@ -3,6 +3,7 @@ import { WhatsAppInstance } from "@/models/whatsapp/instance/model";
 import { EvolutionApi } from "@/services/evolution/api";
 import { startConnection, ObjectId } from "@/lib/mongoose";
 import { WhatsAppSyncService } from "@/services/whatsapp/sync";
+import { ENV } from "@/env";
 
 const evolution = new EvolutionApi();
 
@@ -46,9 +47,12 @@ export async function GET(req: Request) {
            }
 
           // 2. Verify Webhook configuration
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+          const appUrl = ENV.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL;
           if (appUrl) {
             try {
+              if ((ENV.NODE_ENV || process.env.NODE_ENV) !== "development" && /^https?:\/\/localhost\b/i.test(appUrl)) {
+                throw new Error("NEXT_PUBLIC_APP_URL aponta para localhost. Em produção, use a URL pública do seu app.");
+              }
               const webhookUrl = `${appUrl}/api/webhooks/evolution`;
               const currentWebhook = await evolution.findWebhook(instance.instanceName);
               
