@@ -1,11 +1,9 @@
 "use client"
-import { usePathname } from "next/navigation";
 import { NavMain } from "@/components/nav/nav-main";
 import { NavUser } from "@/components/nav/nav-user";
 import { useAuth } from "@/services/auth/session";
 import * as React from "react";
 import { MENU } from "@/components/nav/items";
-import { ENV } from "@/env";
 import Image from "next/image";
 
 import {
@@ -20,7 +18,6 @@ import {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
-  const pathname = usePathname();
   //const isAdmin = user?.role === "admin" && pathname.includes("/dashboard");
   const role = user?.role;
   const items = MENU[role as "admin" | "operational" | "commercial"] ?? MENU.user;

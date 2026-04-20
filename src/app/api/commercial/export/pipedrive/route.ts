@@ -132,9 +132,12 @@ export async function POST(req: NextRequest) {
                 if (createDeal) {
                     // 4. Create Deal
                     const dealCustomFields: any = {};
-                    if (lead.rating) {
-                        dealCustomFields["2c4dd0ea375e3c4af42948c3bff5057e16420779"] = lead.rating.toString();
-                    }
+                    
+                    // Comentado para evitar erro "Invalid field(s) in the payload" no Pipedrive
+                    // O campo com este hash parece não existir ou ser inválido no Negócio (Deal)
+                    // if (lead.rating) {
+                    //     dealCustomFields["2c4dd0ea375e3c4af42948c3bff5057e16420779"] = lead.rating.toString();
+                    // }
 
                     //quero que o orgId do createDeal seja finalOrgId
                     const deal = await PipedriveService.createDeal(

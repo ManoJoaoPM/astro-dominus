@@ -1,22 +1,20 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { fetcher } from "@discovery-solutions/struct/client";
 import useSWR from "swr";
 import { toast } from "sonner";
-import Image from "next/image";
 
 // Simple polling component for QR Code
-export default function WhatsAppConnectPage({ params: paramsPromise }: { params: Promise<{ clientId: string }> }) {
-  const { clientId } = use(paramsPromise);
+export default function WhatsAppConnectPage({ params }: { params: { clientId: string } }) {
+  const { clientId } = params;
   
   // Fetch current instance status with active refresh
   const { data: instance, mutate, error } = useSWR<any>(`/api/whatsapp/instances/refresh?clientId=${clientId}`, fetcher, {
     refreshInterval: 10000, // Poll every 10s to check connection status/QR
-    onSuccess: (data) => console.log("[Frontend] Polling instance data:", data),
   });
 
   const [loading, setLoading] = useState(false);
@@ -24,12 +22,10 @@ export default function WhatsAppConnectPage({ params: paramsPromise }: { params:
   const handleCreateInstance = async () => {
     try {
       setLoading(true);
-      console.log("[Frontend] Requesting create instance...");
-      const res = await fetcher("/api/whatsapp/instances", {
+      await fetcher("/api/whatsapp/instances", {
         method: "POST",
         body: { clientId },
       });
-      console.log("[Frontend] Create instance result:", res);
       mutate();
       toast.success("Instância criada. Aguardando QR Code...");
     } catch (e: any) {
@@ -85,7 +81,6 @@ export default function WhatsAppConnectPage({ params: paramsPromise }: { params:
   }
 
   const currentInstance = list[0]; // Handle array or object return
-  console.log(currentInstance)
 
   return (
     <div className="max-w-2xl mx-auto mt-10 space-y-6">

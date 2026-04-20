@@ -2,9 +2,18 @@ import { NextResponse } from "next/server";
 import { WhatsAppInstance } from "@/models/whatsapp/instance/model";
 import { startConnection } from "@/lib/mongoose";
 import axios from "axios";
+import { withSession } from "@/struct";
+import { ENV } from "@/env";
 
-export async function GET(req: Request) {
+export const GET = withSession(async ({ user }, req: Request) => {
   try {
+    if ((ENV.NODE_ENV || process.env.NODE_ENV) !== "development") {
+      return NextResponse.json({ message: "Not Found" }, { status: 404 });
+    }
+    if (!user || !["admin", "operational"].includes(user.role as string)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     await startConnection();
     const { searchParams } = new URL(req.url);
     const text = searchParams.get("text") || "Mensagem de teste automática";
@@ -48,7 +57,10 @@ export async function GET(req: Request) {
     console.log(`[Simulator] Sending webhook to ${appUrl}/api/webhooks/evolution`);
     
     try {
-      await axios.post(`${appUrl}/api/webhooks/evolution`, payload);
+      const secret = ENV.EVOLUTION_WEBHOOK_SECRET || process.env.EVOLUTION_WEBHOOK_SECRET;
+      await axios.post(`${appUrl}/api/webhooks/evolution`, payload, {
+        headers: secret ? { "x-evolution-webhook-secret": String(secret) } : undefined,
+      });
       return NextResponse.json({ 
         success: true, 
         message: "Webhook simulado enviado com sucesso", 
@@ -69,4 +81,4 @@ export async function GET(req: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

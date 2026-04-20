@@ -1,3 +1,4 @@
+import "server-only";
 import z from "zod";
 
 export const envSchema = z.object({
@@ -13,10 +14,12 @@ export const envSchema = z.object({
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
   NEXT_PUBLIC_APP_NAME: z.string(),
   NEXT_PUBLIC_APP_URL: z.string(),
+  APP_URL: z.string().optional(),
   DFS_API_KEY: z.string().optional(),
   EVOLUTION_API_URL: z.string().optional(),
   EVOLUTION_API_KEY: z.string().optional(),
   EVOLUTION_APIKEY: z.string().optional(),
+  EVOLUTION_WEBHOOK_SECRET: z.string().optional(),
   PIPEDRIVE_API_TOKEN: z.string().optional(),
   PIPEDRIVE_COMPANY_DOMAIN: z.string().optional(),
   META_ACCESS_TOKEN: z.string().optional(),
@@ -28,21 +31,9 @@ export const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 const parsed = envSchema.safeParse(process.env);
 
-if (typeof window === "undefined" && !parsed.success) {
-  console.log(parsed);
-  throw new Error("Erro na validação das variáveis de ambiente: ");
+if (!parsed.success) {
+  console.error(parsed.error.format());
+  throw new Error("Erro na validação das variáveis de ambiente.");
 }
 
-interface PickerParams {
-  development: any;
-  production: any;
-  test?: any;
-}
-
-export const ENV = {
-  ...process.env,
-  picker: (params: PickerParams) => {
-    const key = ENV.NODE_ENV || "development";
-    return params[key as keyof typeof params] || params.development;
-  },
-} as Env & { picker: (params: PickerParams) => any };
+export const ENV = parsed.data as Env;

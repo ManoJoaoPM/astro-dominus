@@ -2,14 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { WhatsAppInstance } from "@/models/whatsapp/instance/model";
 import { WhatsAppSyncService } from "@/services/whatsapp/sync";
 import { startConnection } from "@/lib/mongoose";
+import { withSession } from "@/struct";
 
-export async function POST(
-  req: NextRequest,
-  context: { params: Promise<{ id: string }> }
-) {
+export const POST = withSession(async ({ user }, req: NextRequest, context: any) => {
   try {
+    if (!user || !["admin", "operational"].includes(user.role as string)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     await startConnection();
-    const { id } = await context.params;
+    const params = await context?.params;
+    const id = params?.id as string | undefined;
+    if (!id) {
+      return NextResponse.json({ error: "Instância não informada" }, { status: 400 });
+    }
     
     const dbInstance = await WhatsAppInstance.findById(id);
     if (!dbInstance) {
@@ -24,4 +30,4 @@ export async function POST(
     console.error("Sync Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+});

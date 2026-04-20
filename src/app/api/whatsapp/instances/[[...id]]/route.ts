@@ -44,7 +44,7 @@ export const {
       const instanceName = `client-${data.clientId}-${nanoid(6)}`;
       
       // We assume the app URL is available in ENV for webhook
-      const appUrl = ENV.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL;
+      const appUrl = ENV.APP_URL || ENV.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL;
       if (!appUrl) {
         throw new Error("NEXT_PUBLIC_APP_URL não configurada. Necessária para receber mensagens via webhook.");
       }

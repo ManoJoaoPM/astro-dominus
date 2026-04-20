@@ -4,24 +4,32 @@ import { EvolutionApi } from "@/services/evolution/api";
 import { startConnection, ObjectId } from "@/lib/mongoose";
 import { WhatsAppSyncService } from "@/services/whatsapp/sync";
 import { ENV } from "@/env";
+import { withSession } from "@/struct";
 
 const evolution = new EvolutionApi();
 
-export async function GET(req: Request) {
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+export const GET = withSession(async ({ user }, req: Request) => {
   try {
+    if (!user || !["admin", "operational", "commercial"].includes(user.role as string)) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     await startConnection();
     const { searchParams } = new URL(req.url);
     const clientId = searchParams.get("clientId");
 
     if (!clientId) {
-      return NextResponse.json({ error: "clientId required" }, { status: 400 });
+      return NextResponse.json({ error: "clientId required" }, { status: 400, headers: { "Cache-Control": "no-store" } });
     }
 
     // Find ALL instances for this client
     const instances = await WhatsAppInstance.find({ clientId: new ObjectId(clientId) });
 
     if (instances.length === 0) {
-      return NextResponse.json({ data: [], results: [] });
+      return NextResponse.json({ data: [], results: [] }, { headers: { "Cache-Control": "no-store" } });
     }
 
     // Refresh status for each instance
@@ -47,7 +55,7 @@ export async function GET(req: Request) {
            }
 
           // 2. Verify Webhook configuration
-          const appUrl = ENV.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_APP_URL;
+          const appUrl = ENV.APP_URL || ENV.NEXT_PUBLIC_APP_URL || process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL;
           if (appUrl) {
             try {
               if ((ENV.NODE_ENV || process.env.NODE_ENV) !== "development" && /^https?:\/\/localhost\b/i.test(appUrl)) {
@@ -87,10 +95,13 @@ export async function GET(req: Request) {
       return instance;
     }));
 
-    return NextResponse.json({ data: refreshedInstances, results: refreshedInstances });
+    return NextResponse.json(
+      { data: refreshedInstances, results: refreshedInstances },
+      { headers: { "Cache-Control": "no-store" } }
+    );
 
   } catch (error: any) {
     console.error("Refresh Instance Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
-}
+});

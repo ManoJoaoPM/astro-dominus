@@ -16,6 +16,7 @@ export interface MessageInterface {
   direction: "inbound" | "outbound";
   messageType: "text" | "image" | "audio" | "video" | "document" | "other";
   content: string; // Text body or caption
+  status?: string;
   mediaUrl?: string;
   mediaMeta?: {
     mimetype?: string;
@@ -50,5 +51,6 @@ export const messageSchema = z.object({
   direction: z.enum(["inbound", "outbound"]),
   messageType: z.enum(["text", "image", "audio", "video", "document", "other"]),
   content: z.string(),
+  status: z.string().optional(),
   timestamp: z.number(),
 });

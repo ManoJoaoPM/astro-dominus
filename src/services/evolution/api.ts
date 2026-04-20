@@ -172,11 +172,13 @@ export class EvolutionApi {
       "CONNECTION_UPDATE",
     ];
 
+    const secret = ENV.EVOLUTION_WEBHOOK_SECRET || process.env.EVOLUTION_WEBHOOK_SECRET;
+
     const payloadV2 = {
       webhook: {
         enabled: true,
         url: webhookUrl,
-        headers: {},
+        headers: secret ? { "x-evolution-webhook-secret": String(secret) } : {},
         byEvents: true,
         base64: false,
         events,

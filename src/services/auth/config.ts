@@ -2,26 +2,7 @@ import { CredentialsProvider } from "@/services/auth/credentials";
 import { GoogleProvider } from "@/services/auth/google";
 import { NextAuthConfig } from "next-auth";
 import { ENV } from "@/env";
-
-export const publicRoutes = [
-  "/auth",
-  "/favicon.ico",
-  "/robots.txt",
-  "/_next/static",
-  "/_next/image",
-  "/api/public",
-  "/fonts",
-  "/images",
-  "/icon",
-  "/api",
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".json",
-  ".svg",
-  ".webp",
-  ".ico",
-];
+export { publicRoutes } from "@/services/auth/public-routes";
 
 export const authConfig = {
   providers: [

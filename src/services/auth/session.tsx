@@ -2,7 +2,7 @@
 import { createContext, Suspense, useContext, useEffect } from "react";
 import { redirect, usePathname } from "next/navigation";
 import { CustomSession } from "@/services/auth/utils";
-import { publicRoutes } from "@/services/auth/config";
+import { publicRoutes } from "@/services/auth/public-routes";
 import { useQuery } from "@tanstack/react-query";
 import { fetcher } from "@discovery-solutions/struct/client";
 

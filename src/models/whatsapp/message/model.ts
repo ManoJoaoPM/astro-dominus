@@ -18,6 +18,7 @@ const schema = new Schema<MessageInterface>(
     direction: { type: String, enum: ["inbound", "outbound"], required: true, index: true },
     messageType: { type: String, default: "text" },
     content: { type: String },
+    status: { type: String, index: true },
     mediaUrl: { type: String },
     mediaMeta: {
       mimetype: String,

@@ -1,0 +1,20 @@
+export const publicRoutes = [
+  "/auth",
+  "/favicon.ico",
+  "/robots.txt",
+  "/_next/static",
+  "/_next/image",
+  "/api/public",
+  "/fonts",
+  "/images",
+  "/icon",
+  "/api",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".json",
+  ".svg",
+  ".webp",
+  ".ico",
+];
+

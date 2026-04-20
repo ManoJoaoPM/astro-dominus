@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, use } from "react";
 import useSWR from "swr";
 import { fetcher } from "@discovery-solutions/struct/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -22,8 +21,8 @@ import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { toast } from "sonner";
 
-export default function WhatsAppsPage({ params: paramsPromise }: { params: Promise<{ clientId: string }> }) {
-  const { clientId } = use(paramsPromise);
+export default function WhatsAppsPage({ params }: { params: { clientId: string } }) {
+  const { clientId } = params;
   const { data: instances, mutate, isLoading, error } = useSWR<any>(`/api/whatsapp/instances/refresh?clientId=${clientId}`, fetcher);
 
   const list = instances?.data || instances || [];

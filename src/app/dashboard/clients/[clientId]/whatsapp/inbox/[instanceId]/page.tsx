@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, use } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import useSWR from "swr";
 import useSWRInfinite from "swr/infinite";
 import { fetcher } from "@discovery-solutions/struct/client";
@@ -36,8 +36,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
-export default function WhatsAppInboxPage({ params: paramsPromise }: { params: Promise<{ clientId: string; instanceId: string }> }) {
-  const { clientId, instanceId } = use(paramsPromise);
+export default function WhatsAppInboxPage({ params }: { params: { clientId: string; instanceId: string } }) {
+  const { clientId, instanceId } = params;
 
   // State
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
@@ -45,6 +45,12 @@ export default function WhatsAppInboxPage({ params: paramsPromise }: { params: P
   const [filterOrigin, setFilterOrigin] = useState("all");
   const [onlyPinned, setOnlyPinned] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  const { data: waInstance } = useSWR<any>(
+    `/api/whatsapp/instances/${instanceId}`,
+    fetcher,
+    { refreshInterval: 10000 }
+  );
 
   // Fetch Conversations
   const { data: conversationsData, mutate: mutateConversations } = useSWR<any>(
@@ -129,6 +135,15 @@ export default function WhatsAppInboxPage({ params: paramsPromise }: { params: P
               </Link>
             </Button>
             <h1 className="font-bold flex-1">Conversas</h1>
+            {waInstance?.status ? (
+              <Badge variant="outline" className="text-[10px] h-6">
+                {waInstance.status === "connected"
+                  ? "Conectado"
+                  : waInstance.status === "connecting"
+                    ? "Conectando"
+                    : "Desconectado"}
+              </Badge>
+            ) : null}
             <Button 
               variant="ghost" 
               size="icon" 
@@ -139,6 +154,21 @@ export default function WhatsAppInboxPage({ params: paramsPromise }: { params: P
               <RefreshCw className="h-4 w-4" />
             </Button>
           </div>
+
+          {waInstance?.status && waInstance.status !== "connected" ? (
+            <Button variant="outline" size="sm" asChild className="w-full h-8 text-[11px]">
+              <Link href={`/dashboard/clients/${clientId}/whatsapp/connect/${instanceId}`}>
+                Abrir conexão
+              </Link>
+            </Button>
+          ) : null}
+
+          {waInstance?.lastWebhookAt ? (
+            <div className="text-[10px] text-muted-foreground">
+              Último webhook: {format(new Date(waInstance.lastWebhookAt), "dd/MM HH:mm", { locale: ptBR })}
+              {waInstance.lastWebhookEvent ? ` · ${waInstance.lastWebhookEvent}` : ""}
+            </div>
+          ) : null}
           
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -369,7 +399,7 @@ function ChatMessages({ threadId }: { threadId: string }) {
   }
 
   return (
-    <ScrollArea className="flex-1 bg-slate-50/30" onScroll={handleScroll} ref={scrollRef}>
+    <div className="flex-1 bg-slate-50/30 overflow-y-auto" onScroll={handleScroll} ref={scrollRef}>
       <div className="p-6 space-y-4">
         {isValidating && size > 1 && (
           <div className="text-center p-2">
@@ -434,7 +464,7 @@ function ChatMessages({ threadId }: { threadId: string }) {
           </div>
         )}
       </div>
-    </ScrollArea>
+    </div>
   );
 }
 

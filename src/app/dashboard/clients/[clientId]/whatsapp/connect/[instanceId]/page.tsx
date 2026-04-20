@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, RefreshCw, CheckCircle, AlertCircle, ArrowLeft, Terminal } from "lucide-react";
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Terminal } from "lucide-react";
 import { fetcher } from "@discovery-solutions/struct/client";
 import useSWR from "swr";
 import { toast } from "sonner";
@@ -12,8 +12,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export default function WhatsAppConnectPage({ params: paramsPromise }: { params: Promise<{ clientId: string; instanceId: string }> }) {
-  const { clientId, instanceId } = use(paramsPromise);
+export default function WhatsAppConnectPage({ params }: { params: { clientId: string; instanceId: string } }) {
+  const { clientId, instanceId } = params;
   
   // Fetch current instance status with active refresh
   const { data: instance, mutate } = useSWR<any>(`/api/whatsapp/instances/${instanceId}`, fetcher, {
@@ -80,7 +80,21 @@ export default function WhatsAppConnectPage({ params: paramsPromise }: { params:
                 <div>
                   <CardTitle>Status: {instance.instanceName}</CardTitle>
                   <CardDescription>
-                    {instance.phoneNumber || "Aguardando conexão..."}
+                    <div className="space-y-1">
+                      <div>{instance.phoneNumber || "Aguardando conexão..."}</div>
+                      <div className="text-xs">
+                        Último webhook:{" "}
+                        {instance.lastWebhookAt
+                          ? format(new Date(instance.lastWebhookAt), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })
+                          : "—"}
+                        {instance.lastWebhookEvent ? ` · ${instance.lastWebhookEvent}` : ""}
+                      </div>
+                      {instance.lastWebhookError ? (
+                        <div className="text-xs text-destructive">
+                          Erro: {String(instance.lastWebhookError).slice(0, 140)}
+                        </div>
+                      ) : null}
+                    </div>
                   </CardDescription>
                 </div>
                 <StatusIndicator status={instance.status} />
@@ -146,7 +160,7 @@ export default function WhatsAppConnectPage({ params: paramsPromise }: { params:
             <CardContent>
               <div className="bg-slate-950 rounded-lg p-4 font-mono text-xs text-slate-300 space-y-2 max-h-[400px] overflow-y-auto">
                 {instance.logs?.length > 0 ? (
-                  instance.logs.reverse().map((log: any, i: number) => (
+                  instance.logs.slice().reverse().map((log: any, i: number) => (
                     <div key={i} className="border-b border-slate-800 pb-2 last:border-0">
                       <span className="text-slate-500">[{format(new Date(log.timestamp), "HH:mm:ss")}]</span>{" "}
                       <span className="text-blue-400">{log.event}</span>:{" "}

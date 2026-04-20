@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { authConfig } from "@/services/auth/config";
+import { authEdgeConfig } from "@/services/auth/config-edge";
 import NextAuth from "next-auth";
 
-const { auth } = NextAuth(authConfig);
+const { auth } = NextAuth({ ...authEdgeConfig, providers: authEdgeConfig.providers ?? [] });
 
 export const middleware = auth(async (request) => {
   const pathname = request.nextUrl.pathname;
