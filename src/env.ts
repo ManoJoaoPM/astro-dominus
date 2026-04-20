@@ -33,7 +33,12 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   console.error(parsed.error.format());
-  throw new Error("Erro na validação das variáveis de ambiente.");
+  // Permite que o build no Docker/CI passe sem travar pela falta de variáveis reais
+  if (process.env.npm_lifecycle_event === "build") {
+    console.warn("⚠️ Ignorando erro de validação de ambiente durante o processo de build.");
+  } else {
+    throw new Error("Erro na validação das variáveis de ambiente.");
+  }
 }
 
-export const ENV = parsed.data as Env;
+export const ENV = (parsed.success ? parsed.data : process.env) as Env;
